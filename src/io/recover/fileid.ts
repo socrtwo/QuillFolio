@@ -40,7 +40,7 @@ const RECOMMEND_ORDER: Record<string, string[]> = {
 };
 
 /** File kinds QuillFolio itself opens. */
-export const HANDLED_HERE = ['pptx', 'ooxml', 'ppt', 'odp', 'ole', 'xml', 'txt', 'docx', 'rtf'];
+export const HANDLED_HERE = ['pdf', 'fdf', 'xml', 'txt', 'png', 'jpg', 'gif', 'tif', 'bmp', 'webp', 'zip', 'html'];
 
 export const DESCRIPTIONS: Record<string, string> = {
   docx: 'Microsoft Word document (DOCX, Office Open XML)', xlsx: 'Microsoft Excel workbook (XLSX)', pptx: 'Microsoft PowerPoint presentation (PPTX)',
@@ -269,7 +269,7 @@ export function analyze(bytes: Uint8Array, fileName = 'recovered-file'): FileIdR
     else { seg.recommended = recommend(seg.ext); foreign.push(seg); }
   }
   // Prefer a document segment over loose text or XML that happens to precede it.
-  const docKinds = ['docx', 'ooxml', 'doc', 'odt', 'rtf', 'epub', 'ole'];
+  const docKinds = ['pdf', 'fdf', 'zip'];
   const proceed = matching.find((m) => docKinds.includes(m.ext)) || matching[0] || segments[0];
   if (proceed && matching[0] !== proceed) { matching.splice(matching.indexOf(proceed), 1); matching.unshift(proceed); }
   return {

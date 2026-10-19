@@ -1,7 +1,7 @@
 /* QuillFolio application styles (original design). */
 :root {
   --bg: #eef1f5; --surface: #ffffff; --surface2: #f6f7f9; --text: #1d2330; --muted: #5b6475; --border: #d6dbe3;
-  --accent: #8f3618; --accent-2: #f0c25a; --accent-soft: #f6e3da; --on: #f0cbbb; --danger: #b3261e;
+  --accent: #A6303B; --accent-2: #f0c25a; --accent-soft: #f7e1e3; --on: #f3c4c9; --danger: #b3261e;
   --canvas: #d9dde3; --page: #ffffff; --shadow: 0 1px 3px rgba(0,0,0,.18), 0 4px 14px rgba(0,0,0,.08);
   --ql-ui-scale: 1; --btn: calc(40px * var(--ql-ui-scale)); --ico: calc(22px * var(--ql-ui-scale));
   /* System bars and cutouts. Android (Capacitor edge-to-edge) reports them as --safe-area-inset-*, iOS and
@@ -15,7 +15,7 @@
 }
 :root[data-theme=dark] {
   --bg: #1b1f27; --surface: #232833; --surface2: #2b313d; --text: #e6e9ef; --muted: #a3abba; --border: #3a4150;
-  --accent: #f0a27f; --accent-soft: #4a2d22; --on: #5c3527; --canvas: #12151b; --shadow: 0 1px 3px rgba(0,0,0,.5);
+  --accent: #e8838d; --accent-soft: #4a2328; --on: #5c2a30; --canvas: #12151b; --shadow: 0 1px 3px rgba(0,0,0,.5);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -366,7 +366,7 @@ textarea { width: 100%; resize: vertical; font-family: ui-monospace, "Cousine", 
   .ql-status-view:not(.ql-on) { display: none; }
   .ql-shortcuts td:nth-child(2) { white-space: normal; overflow-wrap: anywhere; }
 }
-/* Short windows (phones in landscape): an icon-only ribbon leaves the slide room to work in. Labels remain in the tooltips, the command search and the Customize dialogs. */
+/* Short windows (phones in landscape): an icon-only ribbon leaves the page room to work in. Labels remain in the tooltips, the command search and the Customize dialogs. */
 @media (max-height: 500px) {
   .ql-titlebar { min-height: calc(40px * var(--ql-ui-scale)); }
   .ql-tab { padding-top: 6px; padding-bottom: 5px; }
@@ -534,88 +534,13 @@ body.ql-fullscreen .ql-titlebar, body.ql-fullscreen .ql-tabs, body.ql-fullscreen
 .ql-pp-view { --sc-bg: #8a8f98; }
 /* ===== end Scroll cues ===== */
 
-/* ===== QuillFolio: workspace, thumbnails, slide canvas, views ===== */
+/* ===== QuillFolio: shared pieces kept from the suite shell (the viewer itself is in folio.css) ===== */
 .ql-qat-below { display: none; background: var(--surface2); border-bottom: 1px solid var(--border); padding: 0 4px; min-height: 34px; align-items: center; flex: none; }
 .ql-qat-below-ribbon .ql-qat-below { display: flex; }
 .ql-present { background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.35); color: #fff; display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 18px; margin: 0 4px; cursor: pointer; }
 .ql-present:hover { background: rgba(255,255,255,.24); }
 @media (max-width: 700px) { .ql-present-label { display: none; } .ql-present { padding: 4px 8px; } }
-.qs-doc { flex: 1; display: flex; min-width: 0; min-height: 0; }
-.qs-workspace { flex: 1; display: flex; min-width: 0; min-height: 0; background: var(--canvas); }
-.qs-rail { width: calc(190px * var(--ql-ui-scale)); flex: none; overflow-y: auto; overflow-x: hidden; background: var(--surface2); border-right: 1px solid var(--border); padding: 8px 6px 24px; display: flex; flex-direction: column; gap: 6px; outline: none; }
-.qs-thumb { display: flex; gap: 4px; align-items: flex-start; cursor: pointer; border-radius: 6px; padding: 3px; position: relative; }
-.qs-thumb-num { width: 20px; flex: none; font-size: 11px; color: var(--muted); text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; padding-top: 2px; }
-.qs-thumb-mark { font-size: 13px !important; }
-.qs-thumb-img { flex: 1; aspect-ratio: auto; border: 2px solid transparent; border-radius: 4px; overflow: hidden; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); line-height: 0; }
-.qs-thumb-img svg, .qs-sort-item svg, .qs-notespage-slide svg, .ql-template-thumb svg { width: 100%; height: auto; display: block; }
-.qs-thumb.qs-selected .qs-thumb-img { border-color: var(--accent-soft); }
-.qs-thumb.qs-current .qs-thumb-img { border-color: var(--accent); }
-.qs-thumb.qs-hidden-slide .qs-thumb-img { opacity: .45; }
-.qs-thumb.qs-hidden-slide .qs-thumb-num { text-decoration: line-through; }
-.qs-thumb.qs-drop-before { box-shadow: inset 0 3px 0 var(--accent); }
-.qs-thumb.qs-drop-after { box-shadow: inset 0 -3px 0 var(--accent); }
-.qs-thumb-label { position: absolute; left: 28px; right: 6px; bottom: 6px; font-size: 10px; background: rgba(0,0,0,.55); color: #fff; padding: 1px 4px; border-radius: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.qs-layout-thumb { padding-left: 18px; }
-.qs-section-head { display: flex; align-items: center; gap: 2px; font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 4px; }
-.qs-rail-add { display: flex; align-items: center; justify-content: center; gap: 4px; border: 1px dashed var(--border); background: transparent; border-radius: 6px; padding: 8px; cursor: pointer; color: var(--muted); margin-left: 24px; }
-.qs-rail-add:hover { background: var(--accent-soft); color: var(--text); }
-.qs-center { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
-.qs-canvas { flex: 1; position: relative; overflow: auto; display: grid; place-items: center; outline: none; touch-action: none; min-height: 0; padding: 16px; }
-.qs-edit-stage { position: relative; flex: none; box-shadow: 0 2px 12px rgba(0,0,0,.25); background: #fff; }
-.qs-slide-host, .qs-edit-overlay { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
-.qs-slide-host svg { display: block; width: 100%; height: 100%; }
-.qs-guides { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 3; overflow: visible; }
-.qs-edit-overlay { pointer-events: none; z-index: 2; }
-.qs-sel { position: absolute; outline: calc(1.5px * var(--qs-inv, 1)) solid #4285f4; pointer-events: auto; cursor: move; transform-origin: 50% 50%; }
-.qs-sel.qs-sel-editing { outline-style: dashed; cursor: text; pointer-events: none; }
-.qs-sel.qs-sel-locked { outline-color: #9aa0a6; cursor: default; }
-.qs-handle { position: absolute; width: calc(10px * var(--qs-inv, 1)); height: calc(10px * var(--qs-inv, 1)); background: #fff; border: calc(1.5px * var(--qs-inv, 1)) solid #4285f4; border-radius: 50%; margin: calc(-5px * var(--qs-inv, 1)) 0 0 calc(-5px * var(--qs-inv, 1)); pointer-events: auto; touch-action: none; }
-.ql-touch .qs-handle, .qs-canvas:has(.qs-handle) .qs-handle:where(:hover) { width: calc(16px * var(--qs-inv, 1)); height: calc(16px * var(--qs-inv, 1)); margin: calc(-8px * var(--qs-inv, 1)) 0 0 calc(-8px * var(--qs-inv, 1)); }
-.qs-h-nw { left: 0; top: 0; cursor: nwse-resize; } .qs-h-n { left: 50%; top: 0; cursor: ns-resize; } .qs-h-ne { left: 100%; top: 0; cursor: nesw-resize; }
-.qs-h-e { left: 100%; top: 50%; cursor: ew-resize; } .qs-h-se { left: 100%; top: 100%; cursor: nwse-resize; } .qs-h-s { left: 50%; top: 100%; cursor: ns-resize; }
-.qs-h-sw { left: 0; top: 100%; cursor: nesw-resize; } .qs-h-w { left: 0; top: 50%; cursor: ew-resize; }
-.qs-rot { left: 50%; top: calc(-24px * var(--qs-inv, 1)); cursor: grab; background: #4285f4; }
-.qs-tool-active, .qs-tool-active * { cursor: crosshair !important; }
-.qs-painting .qs-canvas, .qs-painting .qs-canvas * { cursor: copy !important; }
-.qs-textedit { position: absolute; pointer-events: auto; outline: none; cursor: text; white-space: pre-wrap; overflow-wrap: break-word; transform-origin: 50% 50%; caret-color: #4285f4; z-index: 4; line-height: 1.2; }
-.qs-textedit .qs-tp { min-height: 1em; }
-.qs-textedit .qs-tp[data-bullet]::before { content: attr(data-bullet); display: inline-block; min-width: var(--qs-hang, 0); text-indent: 0; }
-.qs-notes { flex: none; height: 110px; border-top: 1px solid var(--border); background: var(--surface); resize: vertical; overflow: hidden; display: flex; }
-.qs-notes-input { flex: 1; border: 0; border-radius: 0; resize: none; font-family: var(--font-ui); font-size: 14px; padding: 8px 12px; background: transparent; }
-.qs-altview { flex: 1; overflow: auto; min-width: 0; min-height: 0; background: var(--canvas); }
-.qs-outline { max-width: 900px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
-.qs-outline-slide { display: flex; gap: 8px; background: var(--surface); border-radius: 8px; padding: 8px; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
-.qs-outline-slide.qs-current { box-shadow: 0 0 0 2px var(--accent); }
-.qs-outline-num { width: 34px; flex: none; color: var(--muted); display: flex; flex-direction: column; align-items: center; font-size: 13px; }
-.qs-outline-text { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.qs-outline-title { font-weight: 700; font-size: 16px; border: 0; background: transparent; }
-.qs-outline-body { border: 0; background: transparent; font-family: var(--font-ui); font-size: 14px; resize: none; overflow: hidden; tab-size: 4; min-height: 28px; }
-.qs-outline-title:focus, .qs-outline-body:focus { outline: 2px solid var(--accent-soft); }
-.qs-sorter { display: grid; grid-template-columns: repeat(auto-fill, minmax(calc(220px * var(--ql-ui-scale)), 1fr)); gap: 18px; padding: 18px; align-content: start; outline: none; }
-.qs-sorter-section { grid-column: 1 / -1; font-weight: 600; color: var(--muted); border-bottom: 1px solid var(--border); padding-bottom: 2px; }
-.qs-sort-item { cursor: pointer; border-radius: 6px; padding: 3px; border: 3px solid transparent; }
-.qs-sort-item .qs-thumb-img { border: 0; }
-.qs-sort-item.qs-selected { border-color: var(--accent); }
-.qs-sort-item.qs-hidden-slide .qs-thumb-img { opacity: .45; }
-.qs-sort-item.qs-drop-before { box-shadow: -4px 0 0 var(--accent); }
-.qs-sort-item.qs-drop-after { box-shadow: 4px 0 0 var(--accent); }
-.qs-sort-meta { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); padding-top: 3px; }
-.qs-sort-meta .ql-icon { font-size: 15px; }
-.qs-notespage { max-width: 760px; margin: 18px auto; background: #fff; color: #111; box-shadow: var(--shadow); padding: 36px 48px; display: flex; flex-direction: column; gap: 16px; }
-.qs-notespage-slide { border: 1px solid #ccc; line-height: 0; }
-.qs-notespage-text { min-height: 220px; font-family: var(--font-ui); font-size: 15px; color: #111; background: #fff; }
-.qs-notespage-foot { display: flex; justify-content: space-between; align-items: center; color: #555; }
-.qs-reading { height: 100%; display: flex; flex-direction: column; background: #111; }
-.qs-reading-stage { flex: 1; display: grid; place-items: center; outline: none; min-height: 0; padding: 8px; }
-.qs-reading-stage svg { max-width: 100%; max-height: 100%; width: auto; height: auto; }
-.qs-reading-bar { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px; color: #ddd; }
-.qs-reading-bar .ql-iconbtn { color: #ddd; }
-.qs-template-thumb { aspect-ratio: 16 / 9; overflow: hidden; background: #fff; border-radius: 4px; line-height: 0; }
 .ql-nav-sub { padding-left: 22px; }
 .ql-sel-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 700px) {
-  .qs-rail { width: 92px; padding: 6px 3px; }
-  .qs-thumb-num { width: 14px; font-size: 10px; }
-  .qs-notes { height: 80px; }
-  .qs-canvas { padding: 6px; }
 }

@@ -97,6 +97,8 @@ export class PdfStream {
 }
 
 export const isName = (o: unknown, name?: string): o is Name => o instanceof Name && (name === undefined || o.name === name);
+/** Array predicate form (filter/every) without the optional name argument. */
+export const nameObj = (o: unknown): o is Name => o instanceof Name;
 export const isDict = (o: unknown): o is Dict => o instanceof Dict;
 export const isStream = (o: unknown): o is PdfStream => o instanceof PdfStream;
 export const isRef = (o: unknown): o is Ref => o instanceof Ref;

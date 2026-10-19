@@ -6,7 +6,7 @@
  * Encoding: FlateDecode with a small DEFLATE compressor (LZ77 + fixed Huffman), synchronous.
  */
 import { immortalInflate } from '../io/recover/inflate';
-import { Dict, Name, PdfObj, PdfStream, isName } from './objects';
+import { Dict, Name, PdfObj, PdfStream, isName, nameObj } from './objects';
 
 export const IMAGE_FILTERS = new Set(['DCTDecode', 'DCT', 'JPXDecode', 'CCITTFaxDecode', 'CCF', 'JBIG2Decode']);
 
@@ -18,7 +18,7 @@ const ALIASES: Record<string, string> = { Fl: 'FlateDecode', LZW: 'LZWDecode', A
 export function filterChain(dict: Dict, resolve: (o: PdfObj | undefined) => PdfObj): [string, Dict | null][] {
   const f = resolve(dict.get('Filter') ?? dict.get('F'));
   const p = resolve(dict.get('DecodeParms') ?? dict.get('DP'));
-  const names: string[] = isName(f) ? [f.name] : Array.isArray(f) ? f.map((x) => resolve(x)).filter(isName).map((x) => (x as Name).name) : [];
+  const names: string[] = isName(f) ? [f.name] : Array.isArray(f) ? f.map((x) => resolve(x)).filter(nameObj).map((x) => (x as Name).name) : [];
   const params: (Dict | null)[] = Array.isArray(p) ? p.map((x) => { const r = resolve(x); return r instanceof Dict ? r : null; }) : [p instanceof Dict ? p : null];
   return names.map((n, i) => [ALIASES[n] || n, params[i] ?? null]);
 }

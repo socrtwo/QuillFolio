@@ -1,28 +1,33 @@
 # Contributing to QuillFolio
 
-Thank you for your interest. QuillFolio is in the **planning stage — there is no code yet**, so the most useful contributions right now are:
+Thanks for your interest. QuillFolio is an original, clean-room PDF app; the rules below keep it that way and keep the suite consistent.
 
-- **Feedback on the plan:** missing commands, wrong command placement, ideas from other presentation software, and corrections to [docs/INNOVATIONS.md](docs/INNOVATIONS.md) or [docs/QAT.md](docs/QAT.md). Open an issue with the *Feature request* template.
-- **Test files:** presentations you made yourself (or that are openly licensed) that exercise unusual features, and damaged files for the recovery engine. Do not attach files you do not have the right to share or that contain private information.
+## What helps most
 
-## Ground rules
+- **Bug reports with files:** PDFs you made yourself (or that are openly licensed) that render, fill or save wrongly, and damaged files for the repair pipeline. Say which reader produced them. Never attach confidential documents.
+- **Feedback on the plan:** missing commands, wrong command placement, ideas from other PDF software, and corrections to [docs/INNOVATIONS.md](docs/INNOVATIONS.md).
+- **Code:** see below.
 
-- **Clean room.** Do not contribute code, text, templates, images, sounds or icons copied from proprietary software, its documentation or its help files, and do not consult leaked or decompiled source. Work from public specifications, open-source references and your own observation of behavior. See [docs/LEGAL.md](docs/LEGAL.md).
-- **Generic names.** Use the generic terms in docs/LEGAL.md (Diagram, Decorative Text, Smooth Morph…) in the interface and code.
-- **No missing commands.** Every new feature is a command in the registry with an id, label, icon, tab and group (or *not in tabs*), so it can be placed on the Quick Access Bar, custom tabs, shortcuts and macros and found by command search.
-- **American English** in the interface, code comments and documentation.
-- **Licenses.** Contributions are accepted under the MIT License. New dependencies must use a permissive license (MIT, BSD, Apache 2.0, ISC, SIL OFL for fonts).
+## Rules
 
-## When code exists
+- **Clean room.** No code, text, icons or assets copied from proprietary software, and no reading of leaked or decompiled sources. Write from the public specifications (ISO 32000, XFDF, FDF, the image formats) and from the behavior you observe in files. Vendor product names appear only in file-type lists and in [docs/LEGAL.md](docs/LEGAL.md); the interface uses generic terms.
+- **No missing commands.** Every feature is a `def()` command in `src/commands/*.ts` with an id, a label, a Material Symbols icon, a tab and a group. Tabs, the Quick Access Bar, menus, shortcuts, macros and search use ids only. Register a command only when it works; planned ids go in [docs/COMMANDS-PLAN.md](docs/COMMANDS-PLAN.md).
+- **The engine is the document of record.** Changes go through `src/pdf` (objects, writer, ops); pdf.js is used for drawing and text extraction only. Every edit must survive `doc.save({ incremental: true })` and `doc.save({ incremental: false })`; add a unit test that round-trips it.
+- **American English** in the interface, comments and docs. **MIT** license; only permissive dependencies (never GPL/LGPL). Do not put model names or AI attribution in files.
+- Keep the shared shell files (`src/ui/*`, `src/ai/*`, `src/proof/*`, `src/platform/*`, `scripts/*`) as close to QuillStage's as possible so fixes port across the suite.
 
-The workflow will match QuillPen and QuillGrid:
+## Working on the code
 
 ```bash
-npm ci
-npm run dev        # web app at http://localhost:5173
-npm run typecheck
-npm test           # unit tests (vitest)
-npm run build
+npm install
+npm run dev          # Vite dev server
+npm run typecheck && npm test && npm run build
+npm run catalog      # regenerates docs/COMMANDS.md (a test fails when it is stale)
+npm run e2e          # Playwright smoke test against the build
 ```
 
-Keep pull requests focused, include tests for model, file-format and recovery changes, and run the type check and tests before submitting.
+Platform builds: [docs/BUILD.md](docs/BUILD.md). Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+## Pull requests
+
+One topic per pull request. Describe the file or command it changes, add or update tests, run the checks above, and keep the generated catalog in sync. By contributing you agree that your contribution is licensed under the MIT License.

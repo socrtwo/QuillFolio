@@ -3,7 +3,7 @@
  * objects dropped, streams optionally recompressed, optional encryption) and incremental updates
  * (the original bytes untouched, changed objects and a new cross-reference section appended).
  */
-import { Dict, Name, PdfObj, PdfStream, PdfString, Ref, bytesOf, concat, isName, pdfDate } from './objects';
+import { Dict, Name, PdfObj, PdfStream, PdfString, Ref, bytesOf, concat, isName, pdfDate, nameObj } from './objects';
 import { deflateZlib } from './filters';
 import { SecurityHandler, Permissions } from './crypt';
 import type { PdfDocument } from './document';
@@ -111,7 +111,7 @@ const IMAGE_OR_FONT = new Set(['DCTDecode', 'JPXDecode', 'CCITTFaxDecode', 'JBIG
 
 function recompressed(doc: PdfDocument, s: PdfStream): PdfStream {
   const f = s.dict.get('Filter');
-  const names = isName(f) ? [f.name] : Array.isArray(f) ? f.filter(isName).map((n) => (n as Name).name) : [];
+  const names = isName(f) ? [f.name] : Array.isArray(f) ? f.filter(nameObj).map((n) => (n as Name).name) : [];
   if (names.some((n) => IMAGE_OR_FONT.has(n)) || isName(s.dict.get('Type'), 'XRef')) return s;
   if (names.length === 1 && names[0] === 'FlateDecode' && !s.dict.has('DecodeParms')) return s; // already Flate without predictor
   let data: Uint8Array;
@@ -198,7 +198,7 @@ export function writeFull(doc: PdfDocument, opts: SaveOptions = {}): Uint8Array 
   }
   const newTrailer = new Dict();
   const root = trailer.get('Root');
-  newTrailer.set('Root', root instanceof Ref ? mapRef(root) : root ?? null);
+  newTrailer.set('Root', root instanceof Ref ? mapRef(root) : (root ?? null) as PdfObj);
   const info = trailer.get('Info');
   if (info instanceof Ref && map.has(info.num)) newTrailer.set('Info', mapRef(info));
   newTrailer.set('ID', [new PdfString(id0, true), new PdfString(id1, true)]);
@@ -246,7 +246,7 @@ export function writeIncremental(doc: PdfDocument, opts: SaveOptions = {}): Uint
   for (const [n, obj] of changed) {
     if (obj === null) { deleted.push(n); continue; }
     const gen = doc.genOf(n);
-    let o = obj;
+    let o: PdfObj = obj;
     if (doc.security) o = doc.security.encryptObject(o, new Ref(n, gen));
     offsets.set(n, pos);
     push(bytesOf(`${n} ${gen} obj\n`)); push(serialize(o)); push(bytesOf('\nendobj\n'));

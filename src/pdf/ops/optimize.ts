@@ -4,7 +4,7 @@
  * a hidden-information report, document statistics, font lists, and preflight-style checks
  * (archival, accessibility) reported honestly as checks rather than conformance.
  */
-import { Dict, Name, PdfObj, PdfStream, PdfString, Ref, isName } from '../objects';
+import { Dict, Name, PdfObj, PdfStream, PdfString, Ref, isName, nameObj } from '../objects';
 import { PdfDocument } from '../document';
 import { readAttachments, readLayers, readMetadata, pageAnnotations, readFields, readOutlines } from '../structure';
 import { IMAGE_FILTERS } from '../filters';
@@ -28,7 +28,7 @@ export function listImages(doc: PdfDocument): ImageInfo[] {
       if (ref instanceof Ref) { if (seen.has(ref.num)) continue; seen.add(ref.num); }
       const f = s.dict.get('Filter');
       const cs = doc.get(s, 'ColorSpace');
-      out.push({ ref: ref instanceof Ref ? ref : null, page, name: k, width: doc.getNum(s, 'Width'), height: doc.getNum(s, 'Height'), bpc: doc.getNum(s, 'BitsPerComponent', 8), colorSpace: isName(cs) ? cs.name : Array.isArray(cs) && isName(cs[0]) ? cs[0].name : cs ? 'other' : '', filter: isName(f) ? f.name : Array.isArray(f) ? f.filter(isName).map((n) => (n as Name).name).join('+') : '', bytes: s.raw.length, hasMask: s.dict.has('SMask') || s.dict.has('Mask'), stream: s });
+      out.push({ ref: ref instanceof Ref ? ref : null, page, name: k, width: doc.getNum(s, 'Width'), height: doc.getNum(s, 'Height'), bpc: doc.getNum(s, 'BitsPerComponent', 8), colorSpace: isName(cs) ? cs.name : Array.isArray(cs) && isName(cs[0]) ? cs[0].name : cs ? 'other' : '', filter: isName(f) ? f.name : Array.isArray(f) ? f.filter(nameObj).map((n) => (n as Name).name).join('+') : '', bytes: s.raw.length, hasMask: s.dict.has('SMask') || s.dict.has('Mask'), stream: s });
     }
   };
   doc.pages.forEach((p, i) => walk(p.resources, i, 0));

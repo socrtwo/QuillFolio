@@ -292,25 +292,20 @@ export async function onBackButton(cb: () => boolean): Promise<void> {
   App.addListener('backButton', () => { if (!cb()) App.minimizeApp(); });
 }
 
-export const OPEN_ACCEPT = '.pptx,.pptm,.ppsx,.ppsm,.potx,.potm,.ppt,.pps,.pot,.odp,.otp,.fodp,.sxi,.sti,.md,.markdown,.txt,.qsp,.qspe,.json,.xml,.html,.htm'
-  // outlines and documents whose headings become slides
-  + ',.docx,.odt,.rtf';
+export const OPEN_ACCEPT = '.pdf,.fdf,.xfdf,.qfr,.png,.jpg,.jpeg,.gif,.webp,.bmp,.tif,.tiff,.svg,.txt,.md,.markdown,.html,.htm,.json,.zip';
 export const OPEN_MIMES = [
-  'application/x-quillfolio', 'application/x-quillfolio-encrypted',
-  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
-  'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
-  'application/vnd.openxmlformats-officedocument.presentationml.template',
-  'application/vnd.ms-powerpoint', 'application/vnd.oasis.opendocument.presentation', 'application/vnd.oasis.opendocument.flat-presentation',
-  'application/vnd.sun.xml.impress', 'text/markdown', 'text/plain', 'text/html', 'application/xml', 'text/xml', 'application/json', 'application/octet-stream', '*/*',
+  'application/pdf', 'application/x-pdf', 'application/vnd.fdf', 'application/vnd.adobe.xfdf', 'application/x-quillfolio-review',
+  'image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/bmp', 'image/tiff', 'image/svg+xml',
+  'text/markdown', 'text/plain', 'text/html', 'application/json', 'application/zip', 'application/x-zip-compressed', 'application/octet-stream', '*/*',
 ];
 
 // ------------------------------------------------------------------------------------------
 // Sibling Quill apps
 
-export type QuillApp = 'QuillPen' | 'QuillPost' | 'QuillGrid';
+export type QuillApp = 'QuillPen' | 'QuillPost' | 'QuillGrid' | 'QuillStage' | 'QuillLoom' | 'QuillPress';
 export const QUILL_APP_IDS: Record<QuillApp, string> = {
   QuillPen: 'io.github.socrtwo.quillpen', QuillPost: 'io.github.socrtwo.quillpost', QuillGrid: 'io.github.socrtwo.quillgrid',
+  QuillStage: 'io.github.socrtwo.quillstage', QuillLoom: 'io.github.socrtwo.quillloom', QuillPress: 'io.github.socrtwo.quillpress',
 };
 
 /**

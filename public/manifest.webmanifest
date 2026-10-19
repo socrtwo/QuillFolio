@@ -1,7 +1,7 @@
 {
   "name": "QuillFolio",
   "short_name": "QuillFolio",
-  "description": "An open-source presentation app that opens and saves PowerPoint, OpenDocument and Markdown slides, with a complete, customizable command library.",
+  "description": "An open-source PDF app for viewing, editing, forms, signing, OCR and repair, with a complete, customizable command library.",
   "id": "./",
   "start_url": "./",
   "scope": "./",
@@ -11,7 +11,7 @@
     "standalone"
   ],
   "background_color": "#ffffff",
-  "theme_color": "#8F3618",
+  "theme_color": "#A6303B",
   "categories": [
     "productivity",
     "business",
@@ -46,41 +46,21 @@
   "file_handlers": [
     {
       "action": "./",
-      "name": "Presentation",
+      "name": "PDF document",
       "accept": {
-        "application/vnd.openxmlformats-officedocument.presentationml.presentation": [
-          ".pptx"
-        ],
-        "application/vnd.ms-powerpoint.presentation.macroEnabled.12": [
-          ".pptm"
-        ],
-        "application/vnd.openxmlformats-officedocument.presentationml.slideshow": [
-          ".ppsx"
-        ],
-        "application/vnd.openxmlformats-officedocument.presentationml.template": [
-          ".potx"
-        ],
-        "application/vnd.ms-powerpoint": [
-          ".ppt",
-          ".pps",
-          ".pot"
-        ],
-        "application/vnd.oasis.opendocument.presentation": [
-          ".odp"
-        ],
-        "application/vnd.oasis.opendocument.flat-presentation": [
-          ".fodp"
-        ],
-        "text/markdown": [
-          ".md",
-          ".markdown"
-        ],
-        "application/x-quillfolio": [
-          ".qsp"
-        ],
-        "application/x-quillfolio-encrypted": [
-          ".qspe"
-        ]
+        "application/pdf": [".pdf"],
+        "application/vnd.fdf": [".fdf"],
+        "application/vnd.adobe.xfdf": [".xfdf"],
+        "application/x-quillfolio-review": [".qfr"],
+        "image/png": [".png"],
+        "image/jpeg": [".jpg", ".jpeg"],
+        "image/gif": [".gif"],
+        "image/webp": [".webp"],
+        "image/bmp": [".bmp"],
+        "image/tiff": [".tif", ".tiff"],
+        "text/markdown": [".md", ".markdown"],
+        "text/plain": [".txt"],
+        "text/html": [".html", ".htm"]
       }
     }
   ]

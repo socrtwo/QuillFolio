@@ -78,7 +78,7 @@ export function repairPdf(input: Uint8Array | ArrayBuffer, fileName: string, opt
   const id = identifyAt(buf0);
   const segs = scan(buf0);
   const isPdf = id.ext === 'pdf' || Lexer.find(buf0, '%PDF-', 0, Math.min(buf0.length, 65536)) >= 0 || Lexer.find(buf0, ' obj') >= 0;
-  add({ id: 'identify', name: 'File identification', status: isPdf ? 'success' : segs.segments.some((s) => s.ext === 'pdf') ? 'partial' : 'failed', detail: `${id.description} (${id.confidence} confidence)${segs.multiple ? `; ${segs.segments.length} pieces of data found in the file` : ''}${idr.extensionMismatch ? `; the name says .${idr.nameExt} but the content is ${id.ext}` : ''}` });
+  add({ id: 'identify', name: 'File identification', status: isPdf ? 'success' : segs.segments.some((s) => s.ext === 'pdf') ? 'partial' : 'failed', detail: `${id.description} (${id.confidence} confidence)${segs.multiple ? `; ${segs.segments.length} pieces of data found in the file` : ''}${idr.mismatch && !isPdf ? `; the content is not a PDF` : ''}` });
 
   // b. Normal open
   let pagesBefore: number | null = null;
@@ -126,7 +126,7 @@ export function repairPdf(input: Uint8Array | ArrayBuffer, fileName: string, opt
   if (segs.multiple && pdfSegs.length) {
     let got = 0;
     for (const s of pdfSegs) {
-      try { const piece = buf0.subarray(s.start, s.end); const d = PdfDocument.load(piece, { repair: true, password: opts.password }); const r = consider(d, piece.slice()); if (r.pages) got++; } catch { /* */ }
+      try { const piece = buf0.subarray(s.offset, s.offset + s.length); const d = PdfDocument.load(piece, { repair: true, password: opts.password }); const r = consider(d, piece.slice()); if (r.pages) got++; } catch { /* */ }
     }
     add({ id: 'segments', name: 'Embedded or concatenated PDF', status: got ? 'success' : 'failed', detail: `${pdfSegs.length} PDF piece(s) inside the file; ${got} opened.` });
   } else add({ id: 'segments', name: 'Embedded or concatenated PDF', status: 'skipped', detail: 'The file is one piece.' });
@@ -159,7 +159,8 @@ export function repairPdf(input: Uint8Array | ArrayBuffer, fileName: string, opt
     } else add({ id: 'text', name: 'Text scan', status: 'failed', detail: 'No readable text in the streams.' });
     // i. Strings
     const strings = stringsScan(buf0);
-    if (!best && strings.length > 40) {
+    const usable = !!best && (best as any).doc.pageCount > 0;
+    if (!usable && strings.length > 40) {
       const d = PdfDocument.create();
       addTextPages(d, `Readable strings from ${fileName}\n\n${strings}`, { title: `${fileName} (strings)` });
       const out = d.save({ incremental: false });
@@ -171,7 +172,8 @@ export function repairPdf(input: Uint8Array | ArrayBuffer, fileName: string, opt
     add({ id: 'strings', name: 'Strings scan', status: 'skipped', detail: 'Not needed.' });
   }
 
-  const b = best as { doc: PdfDocument; bytes: Uint8Array; score: number; textOnly: boolean } | null;
+  let b = best as { doc: PdfDocument; bytes: Uint8Array; score: number; textOnly: boolean } | null;
+  if (b && b.doc.pageCount === 0) b = null;
   const pagesAfter = b ? b.doc.pageCount : 0;
   const summary = !b ? 'Nothing could be recovered from this file.' : b.textOnly ? `Only text could be recovered (${plural(pagesAfter, 'page')} of text).` : pagesBefore != null && pagesAfter >= pagesBefore && !rebuilt.length && !lost.length ? 'The file opened without repair.' : `${plural(pagesAfter, 'page')} recovered${rebuilt.length ? ` (rebuilt: ${rebuilt.join(', ')})` : ''}${lost.length ? `; lost: ${lost.join('; ')}` : ''}.`;
   return { fileName, methods, summary, doc: b?.doc || null, bytes: b?.bytes || null, lost, rebuilt, identification: { ext: id.ext, description: id.description, confidence: id.confidence }, recommendations: recommend('pdf'), pagesBefore, pagesAfter, textOnly: !!b?.textOnly, tools: recommend('pdf') };

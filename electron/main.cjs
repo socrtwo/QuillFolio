@@ -4,7 +4,7 @@
 // IndexedDB behave as on the web. The renderer is sandboxed with context isolation and no Node;
 // electron/preload.cjs exposes `window.quillDesktop`, the same interface as the Android plugin.
 // File access is limited to files the user opened or saved through a dialog, or opened the app
-// with, so presentation content cannot use the bridge to read or overwrite arbitrary files.
+// with, so document content cannot use the bridge to read or overwrite arbitrary files.
 'use strict';
 const { app, BrowserWindow, protocol, net, ipcMain, dialog, shell, clipboard, safeStorage, powerSaveBlocker, Menu, screen } = require('electron');
 const path = require('node:path');
@@ -16,9 +16,9 @@ const { pathToFileURL, fileURLToPath } = require('node:url');
 const DIST = path.join(__dirname, '..', 'dist');
 const SCHEME = 'app';
 const ORIGIN = `${SCHEME}://quillfolio`;
-const OPENABLE = ['pptx', 'pptm', 'ppsx', 'ppsm', 'potx', 'potm', 'ppt', 'pps', 'pot', 'odp', 'otp', 'fodp', 'sxi', 'sti', 'md', 'markdown', 'txt', 'qsp', 'qspe', 'json', 'xml'];
-/** Documents, slides and mail the app can import or hand to a sibling Quill app (never programs or scripts). */
-const DOCUMENTS = ['docx', 'docm', 'dotx', 'doc', 'odt', 'fodt', 'rtf', 'pdf', 'html', 'htm', 'key', 'xlsx', 'ods', 'csv'];
+const OPENABLE = ['pdf', 'fdf', 'xfdf', 'qfr', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tif', 'tiff', 'svg', 'txt', 'md', 'markdown', 'html', 'htm', 'json', 'zip'];
+/** Documents, slides, sheets and mail the app can hand to a sibling Quill app (never programs or scripts). */
+const DOCUMENTS = ['docx', 'docm', 'dotx', 'doc', 'odt', 'fodt', 'rtf', 'pptx', 'odp', 'xlsx', 'ods', 'csv', 'eml', 'html', 'htm'];
 
 protocol.registerSchemesAsPrivileged([{ scheme: SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);
 
@@ -53,21 +53,13 @@ function grantedPath(uri) {
   return p;
 }
 const MIME = {
-  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-  pptm: 'application/vnd.ms-powerpoint.presentation.macroEnabled.12',
-  ppsx: 'application/vnd.openxmlformats-officedocument.presentationml.slideshow',
-  ppsm: 'application/vnd.ms-powerpoint.slideshow.macroEnabled.12',
-  potx: 'application/vnd.openxmlformats-officedocument.presentationml.template',
-  potm: 'application/vnd.ms-powerpoint.template.macroEnabled.12',
-  ppt: 'application/vnd.ms-powerpoint', pps: 'application/vnd.ms-powerpoint', pot: 'application/vnd.ms-powerpoint',
-  odp: 'application/vnd.oasis.opendocument.presentation',
-  otp: 'application/vnd.oasis.opendocument.presentation-template',
-  fodp: 'application/vnd.oasis.opendocument.flat-presentation',
-  sxi: 'application/vnd.sun.xml.impress', sti: 'application/vnd.sun.xml.impress.template',
-  md: 'text/markdown', markdown: 'text/markdown', txt: 'text/plain', html: 'text/html', htm: 'text/html', xml: 'application/xml',
-  pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg', svg: 'image/svg+xml', webm: 'video/webm', mp4: 'video/mp4', gif: 'image/gif',
-  qsp: 'application/x-quillfolio', qspe: 'application/x-quillfolio-encrypted', json: 'application/json',
-};
+  pdf: 'application/pdf', fdf: 'application/vnd.fdf', xfdf: 'application/vnd.adobe.xfdf', qfr: 'application/x-quillfolio-review',
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp', bmp: 'image/bmp', tif: 'image/tiff', tiff: 'image/tiff', svg: 'image/svg+xml',
+  md: 'text/markdown', markdown: 'text/markdown', txt: 'text/plain', html: 'text/html', htm: 'text/html', json: 'application/json', zip: 'application/zip',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', odt: 'application/vnd.oasis.opendocument.text', rtf: 'application/rtf',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', odp: 'application/vnd.oasis.opendocument.presentation',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', ods: 'application/vnd.oasis.opendocument.spreadsheet', csv: 'text/csv', eml: 'message/rfc822',
+}
 function fileResult(p) {
   const data = fs.readFileSync(p);
   const ext = path.extname(p).slice(1).toLowerCase();
@@ -130,7 +122,7 @@ function registerIpc() {
   handle('openDocument', async () => {
     const r = await dialog.showOpenDialog(win, {
       properties: ['openFile'],
-      filters: [{ name: 'Presentations', extensions: OPENABLE }, { name: 'Documents, slides and mail', extensions: DOCUMENTS }, { name: 'All files', extensions: ['*'] }],
+      filters: [{ name: 'PDF and files QuillFolio can turn into PDF', extensions: OPENABLE }, { name: 'All files', extensions: ['*'] }],
     });
     if (r.canceled || !r.filePaths[0]) return { canceled: true };
     grant(r.filePaths[0]);
@@ -139,7 +131,7 @@ function registerIpc() {
   handle('saveAs', async ({ name, data }) => {
     const ext = path.extname(String(name || '')).slice(1);
     const r = await dialog.showSaveDialog(win, {
-      defaultPath: path.join(app.getPath('documents'), path.basename(String(name || 'presentation'))),
+      defaultPath: path.join(app.getPath('documents'), path.basename(String(name || 'document'))),
       filters: ext ? [{ name: ext.toUpperCase(), extensions: [ext] }, { name: 'All files', extensions: ['*'] }] : undefined,
     });
     if (r.canceled || !r.filePath) return { canceled: true };
@@ -149,7 +141,7 @@ function registerIpc() {
   });
   handle('writeUri', async ({ uri, data }) => {
     const p = grantedPath(uri);
-    // Write a temporary file first, so a failed write never truncates the presentation.
+    // Write a temporary file first, so a failed write never truncates the document.
     const tmp = p + '.ql-saving';
     fs.writeFileSync(tmp, Buffer.from(String(data || ''), 'base64'));
     fs.renameSync(tmp, p);
@@ -159,7 +151,7 @@ function registerIpc() {
   handle('print', async () => new Promise((res) => win.webContents.print({}, () => res())));
   handle('share', async ({ name, data }) => {
     // Desktops have no share sheet: offer Save As.
-    const r = await dialog.showSaveDialog(win, { defaultPath: path.join(app.getPath('documents'), path.basename(String(name || 'presentation'))) });
+    const r = await dialog.showSaveDialog(win, { defaultPath: path.join(app.getPath('documents'), path.basename(String(name || 'document'))) });
     if (!r.canceled && r.filePath) { fs.writeFileSync(r.filePath, Buffer.from(String(data || ''), 'base64')); grant(r.filePath); }
   });
   handle('getLaunchFile', async () => {
@@ -278,31 +270,16 @@ function createWindow() {
       spellcheck: false, // QuillFolio has its own spelling checker
     },
   });
-  // Links open in the system browser; the window never navigates away from the app. The one window
-  // the app opens itself is the slide show's audience view (Presenter View): a blank, sandboxed window
-  // the page writes into, placed full screen on another display when there is one.
-  win.webContents.setWindowOpenHandler(({ url, frameName }) => {
-    if (frameName === 'quillfolio-audience' && (url === 'about:blank' || url === '')) {
-      const displays = screen.getAllDisplays();
-      const mine = screen.getDisplayMatching(win.getBounds());
-      const other = displays.find((d) => d.id !== mine.id);
-      const b = (other || mine).bounds;
-      return {
-        action: 'allow',
-        overrideBrowserWindowOptions: {
-          x: b.x, y: b.y, width: other ? b.width : Math.round(b.width * 0.6), height: other ? b.height : Math.round(b.height * 0.6),
-          fullscreen: !!other, autoHideMenuBar: true, title: 'QuillFolio Slide Show', backgroundColor: '#000000',
-          webPreferences: { contextIsolation: true, sandbox: true, nodeIntegration: false },
-        },
-      };
-    }
+  // Links open in the system browser; the window never navigates away from the app and the page never
+  // opens windows of its own.
+  win.webContents.setWindowOpenHandler(({ url }) => {
     if (safeUrl(url)) void shell.openExternal(url);
     return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith(ORIGIN)) { e.preventDefault(); if (safeUrl(url)) void shell.openExternal(url); } });
-  // The page asks before unloading with unsaved presentations: confirm here, as the browser would.
+  // The page asks before unloading with unsaved documents: confirm here, as the browser would.
   win.webContents.on('will-prevent-unload', (e) => {
-    const choice = dialog.showMessageBoxSync(win, { type: 'question', buttons: ['Close without saving', 'Cancel'], defaultId: 1, cancelId: 1, title: 'Unsaved changes', message: 'Some presentations have unsaved changes. Close QuillFolio anyway?' });
+    const choice = dialog.showMessageBoxSync(win, { type: 'question', buttons: ['Close without saving', 'Cancel'], defaultId: 1, cancelId: 1, title: 'Unsaved changes', message: 'Some documents have unsaved changes. Close QuillFolio anyway?' });
     if (choice === 0) e.preventDefault();
   });
   // A reload or navigation drops the page's listeners until it registers them again.

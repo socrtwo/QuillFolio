@@ -48,35 +48,43 @@ export interface Prefs {
   firstRun: boolean;
   touchMode: boolean;
   miniToolbar: boolean;
-  /** Presentation editing options */
-  defaultTheme: number;
-  defaultSize: 'wide' | 'standard';
-  snapToGrid: boolean;
-  gridSize: number;
-  showGrid: boolean;
-  showGuides: boolean;
-  smartGuides: boolean;
-  showRulers: boolean;
-  showNotes: boolean;
+  /** Viewing */
+  viewMode: 'continuous' | 'single' | 'facing' | 'book';
+  defaultZoom: 'fit-width' | 'fit-page' | 'actual';
   showThumbnails: boolean;
-  /** Slide show */
-  presenterView: boolean;
-  showEndBlack: boolean;
+  smoothScroll: boolean;
+  nightMode: boolean;
+  grayscale: boolean;
+  renderDpiCap: number;
+  /** Editing */
+  highlightColor: string;
   penColor: string;
-  laserColor: string;
-  subtitles: boolean;
-  /** Seconds per slide for Timed Format (0 = off). */
-  timerWarn: number;
+  penWidth: number;
+  noteColor: string;
+  stampOpacity: number;
+  measureUnit: 'pt' | 'in' | 'mm' | 'cm';
+  /** Drawing scale for measurements: real-world units per point, and the unit's name. */
+  measureScale?: number;
+  measureScaleUnit?: string;
+  /** Forms */
+  highlightFields: boolean;
+  /** Saving */
+  saveMode: 'incremental' | 'rewrite';
+  /** OCR */
+  ocrLanguage: string;
+  /** Print */
+  printDpi: number;
 }
 
-export const DEFAULT_QAT = ['file.save', 'edit.undo', 'edit.redo', 'show.fromStart', 'slide.new', 'view.cmdSearch'];
+export const DEFAULT_QAT = ['file.save', 'edit.undo', 'edit.redo', 'home.select', 'comment.highlight', 'view.cmdSearch'];
 
 /**
- * The Quick Access Bar drop-down checklist: the union of the choices desktop presentation programs
- * have offered (docs/QAT.md), then presentation extras.
+ * The Quick Access Bar drop-down checklist: the union of the choices desktop office programs have
+ * offered in their Quick Access Toolbar drop-down (docs/QAT.md), with the PDF equivalent of
+ * "Present from Beginning" (Read Mode from the first page), then PDF extras.
  */
-export const QAT_STANDARD = ['file.autosave', 'file.new', 'file.open', 'file.save', 'file.email', 'file.quickPrint', 'file.print', 'review.spelling', 'edit.undo', 'edit.redo', 'show.fromStart', 'view.touchMode', 'file.openRecent'];
-export const QAT_EXTRAS = ['show.fromCurrent', 'show.presenterView', 'slide.new', 'slide.duplicate', 'file.saveAs', 'file.share', 'file.export.pdf', 'insert.drawTable', 'edit.find', 'edit.formatPainter', 'view.cmdSearch'];
+export const QAT_STANDARD = ['file.autosave', 'file.new', 'file.open', 'file.save', 'file.email', 'file.quickPrint', 'file.print', 'review.spelling', 'edit.undo', 'edit.redo', 'view.readMode', 'view.touchMode', 'file.openRecent'];
+export const QAT_EXTRAS = ['home.select', 'home.hand', 'comment.highlight', 'comment.note', 'organize.rotateRight', 'file.saveAs', 'file.share', 'file.export.images', 'edit.find', 'forms.fillMode', 'view.cmdSearch'];
 export const QAT_CHOICES = [...QAT_STANDARD, ...QAT_EXTRAS];
 /** Kept first, in this order, by addAllQatChoices. */
 export const QAT_PINNED_FIRST = ['file.save', 'file.print'];
@@ -103,11 +111,11 @@ export function defaultPrefs(): Prefs {
     replacements: { ...DEFAULT_REPLACEMENTS }, autoCorrect: true, autoCapitalize: true, smartQuotes: true, autoLists: true,
     theme: 'system', ribbon: 'full', spellcheck: true,
     recent: [], macros: [], dictionary: [], ignoredWords: [],
-    language: 'en-US', spellDialect: 'any', confirmClose: true, defaultSaveFormat: 'pptx', readAloudRate: 1,
+    language: 'en-US', spellDialect: 'any', confirmClose: true, defaultSaveFormat: 'pdf', readAloudRate: 1,
     highContrastUI: false, uiScale: 1, pinnedCommands: [], firstRun: true, touchMode: false, miniToolbar: true,
-    defaultTheme: 0, defaultSize: 'wide', snapToGrid: true, gridSize: 12, showGrid: false, showGuides: false, smartGuides: true,
-    showRulers: false, showNotes: true, showThumbnails: true,
-    presenterView: true, showEndBlack: true, penColor: '#E53935', laserColor: '#FF1744', subtitles: false, timerWarn: 0,
+    viewMode: 'continuous', defaultZoom: 'fit-width', showThumbnails: false, smoothScroll: true, nightMode: false, grayscale: false, renderDpiCap: 3,
+    highlightColor: '#FFEB3B', penColor: '#E53935', penWidth: 2, noteColor: '#FFD54F', stampOpacity: 0.85, measureUnit: 'in',
+    highlightFields: true, saveMode: 'incremental', ocrLanguage: 'eng', printDpi: 150,
   };
 }
 
@@ -127,7 +135,7 @@ export function loadPrefs(): Prefs {
 
 const ENUMS: Partial<Record<keyof Prefs, readonly string[]>> = {
   qatPosition: ['top', 'below', 'bottom'], theme: ['system', 'light', 'dark'], ribbon: ['full', 'tabs', 'hidden'],
-  spellDialect: ['any', 'document', 'en-US', 'en-GB', 'en-CA', 'en-AU'], defaultSize: ['wide', 'standard'],
+  spellDialect: ['any', 'document', 'en-US', 'en-GB', 'en-CA', 'en-AU'], viewMode: ['continuous', 'single', 'facing', 'book'], defaultZoom: ['fit-width', 'fit-page', 'actual'], saveMode: ['incremental', 'rewrite'], measureUnit: ['pt', 'in', 'mm', 'cm'],
 };
 const isObj = (v: unknown): v is Record<string, any> => !!v && typeof v === 'object' && !Array.isArray(v);
 const strings = (v: unknown): string[] => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);

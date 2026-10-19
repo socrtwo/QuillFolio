@@ -417,7 +417,8 @@ export function readFields(doc: PdfDocument): FieldInfo[] {
       if (ftName === 'Tx') type = 'text'; else if (ftName === 'Btn') type = flags & (1 << 16) ? 'button' : flags & (1 << 15) ? 'radio' : 'checkbox'; else if (ftName === 'Ch') type = flags & (1 << 17) ? 'combo' : 'list'; else if (ftName === 'Sig') type = 'signature';
       const v = inh('V');
       let value: string | string[] | boolean = '';
-      if (type === 'checkbox' || type === 'radio') value = isName(v) ? v.name !== 'Off' : false;
+      if (type === 'checkbox') value = isName(v) ? v.name !== 'Off' : false;
+      else if (type === 'radio') value = isName(v) && v.name !== 'Off' ? v.name : '';
       else if (Array.isArray(v)) value = v.map((x) => { const r = doc.resolve(x); return r instanceof PdfString ? r.toText() : isName(r) ? r.name : ''; });
       else if (v instanceof PdfString) value = v.toText(); else if (isName(v)) value = v.name;
       const opts = (inh('Opt') as PdfObj[] | null) || [];

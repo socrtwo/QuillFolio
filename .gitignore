@@ -190,3 +190,7 @@ Thumbs.db
 desktop.ini
 .idea/
 *.swp
+
+# Renderer and OCR assets copied from node_modules by scripts/copy-pdfjs.mjs
+public/pdfjs/
+public/tesseract/

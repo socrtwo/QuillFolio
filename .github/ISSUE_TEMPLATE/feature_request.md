@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest a command, a feature, or an idea from other presentation software
+about: Suggest a command, a feature, or an idea from other PDF software
 title: "[Feature] "
 labels: enhancement
 assignees: ''

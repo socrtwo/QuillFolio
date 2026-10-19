@@ -40,7 +40,7 @@ export async function openDictionaryWizard(app: App): Promise<void> {
     const lang = app.prefs.language || 'en-US';
     const d = CATALOG.find((x) => x.tag.toLowerCase() === lang.toLowerCase()) || CATALOG.find((x) => x.id === dictionaryFor(lang, new Set(CATALOG.map((c) => c.id))));
     const ok = isEnglish(lang) || !!dictionaryFor(lang, installed);
-    current.textContent = `Spelling language for presentations: ${d ? d.name : lang}${ok ? '' : ' — download its dictionary below to check spelling'}`;
+    current.textContent = `Spelling language for comments and form fields: ${d ? d.name : lang}${ok ? '' : ' — download its dictionary below to check spelling'}`;
   };
 
   const useButton = (d: DictInfo) => h('button', { class: 'ql-btn', onclick: () => { useLanguage(app, d); showCurrent(); draw(); } }, (app.prefs.language || '').toLowerCase() === d.tag.toLowerCase() ? '✓ In use' : 'Use for spelling');
