@@ -147,3 +147,50 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# QuillFolio
+dist/
+android/app/build/
+android/build/
+android/.gradle/
+android/local.properties
+android/app/src/main/assets/public/
+android/capacitor-cordova-android-plugins/
+*.keystore
+*.jks
+test-results/
+public/third-party-notices.txt
+build/
+release/
+
+# iOS (Capacitor)
+ios/App/Pods/
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/App/config.xml
+ios/App/output/
+ios/DerivedData/
+**/xcuserdata/
+*.xcuserstate
+*.ipa
+*.mobileprovision
+*.p12
+
+# Electron desktop
+electron/dist/
+out/
+
+# On-device AI models and downloaded dictionaries cached during development
+models/
+.cache-models/
+
+# Operating systems and editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+*.swp
+
+# Renderer and OCR assets copied from node_modules by scripts/copy-pdfjs.mjs
+public/pdfjs/
+public/tesseract/

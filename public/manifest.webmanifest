@@ -1,0 +1,67 @@
+{
+  "name": "QuillFolio",
+  "short_name": "QuillFolio",
+  "description": "An open-source PDF app for viewing, editing, forms, signing, OCR and repair, with a complete, customizable command library.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
+  "background_color": "#ffffff",
+  "theme_color": "#A6303B",
+  "categories": [
+    "productivity",
+    "business",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "name": "PDF document",
+      "accept": {
+        "application/pdf": [".pdf"],
+        "application/vnd.fdf": [".fdf"],
+        "application/vnd.adobe.xfdf": [".xfdf"],
+        "application/x-quillfolio-review": [".qfr"],
+        "image/png": [".png"],
+        "image/jpeg": [".jpg", ".jpeg"],
+        "image/gif": [".gif"],
+        "image/webp": [".webp"],
+        "image/bmp": [".bmp"],
+        "image/tiff": [".tif", ".tiff"],
+        "text/markdown": [".md", ".markdown"],
+        "text/plain": [".txt"],
+        "text/html": [".html", ".htm"]
+      }
+    }
+  ]
+}
