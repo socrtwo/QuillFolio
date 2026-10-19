@@ -55,6 +55,11 @@ export function inflateZlib(data: Uint8Array): { data: Uint8Array; corrupt: bool
   const zlib = (cmf & 0x0f) === 8 && ((cmf << 8) | flg) % 31 === 0;
   const body = data.subarray(zlib ? start + 2 : start);
   const r = immortalInflate(body, { resync: false });
+  if (!zlib && (cmf & 0x0f) === 8 && start + 2 < data.length) {
+    // A damaged FLG byte can make the zlib header invalid while leaving DEFLATE intact.
+    const r2 = immortalInflate(data.subarray(start + 2), { resync: false });
+    if (r2.data.length && (r.isCorrupt || r2.data.length > r.data.length)) return { data: r2.data, corrupt: r2.isCorrupt };
+  }
   if (!zlib && r.isCorrupt && r.data.length === 0 && start + 1 < data.length) {
     // Maybe a damaged header: try from the next byte.
     const r2 = immortalInflate(data.subarray(start + 1), { resync: false });

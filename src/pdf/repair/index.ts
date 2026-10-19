@@ -6,7 +6,7 @@
  */
 import { PdfDocument } from '../document';
 import { Lexer } from '../lexer';
-import { latin1, bytesOf, concat } from '../objects';
+import { latin1, bytesOf, concat, PdfStream } from '../objects';
 import { analyze, identifyAt, scan, recommend, S2Program } from '../../io/recover/fileid';
 import { scanZipBytes } from '../../io/recover/salvage';
 import { makeTextPdf, addTextPages } from '../build';
@@ -44,6 +44,22 @@ function countWords(doc: PdfDocument, maxPages = 20): number {
   return n;
 }
 
+function repairFlateHeaders(doc: PdfDocument): void {
+  for (const page of doc.pages) {
+    const contents = doc.get(page.dict, 'Contents');
+    const streams = Array.isArray(contents) ? contents : contents ? [contents] : [];
+    const damaged = streams.some((item) => {
+      const stream = doc.resolve(item);
+      if (!(stream instanceof PdfStream) || !['FlateDecode', 'Fl'].includes(doc.getName(stream, 'Filter'))) return false;
+      let start = 0;
+      while (start < stream.raw.length && [0x0a, 0x0d, 0x20, 0x09].includes(stream.raw[start])) start++;
+      const cmf = stream.raw[start], flg = stream.raw[start + 1];
+      return (cmf & 0x0f) === 8 && ((cmf << 8) | flg) % 31 !== 0;
+    });
+    if (damaged) doc.setPageContent(page, doc.pageContent(page));
+  }
+}
+
 /** Fixes the header and trailing junk, returning cleaned bytes and notes. */
 function repairHeader(buf: Uint8Array): { bytes: Uint8Array; notes: string[] } {
   const notes: string[] = [];
@@ -66,10 +82,12 @@ export function repairPdf(input: Uint8Array | ArrayBuffer, fileName: string, opt
   const add = (m: MethodResult) => { methods.push(m); opts.onProgress?.(m); };
   let best: { doc: PdfDocument; bytes: Uint8Array; score: number; textOnly: boolean } | null = null;
   const consider = (doc: PdfDocument, bytes: Uint8Array, textOnly = false, bonus = 0): { pages: number; words: number } => {
+    repairFlateHeaders(doc);
     const pages = doc.pageCount;
     const words = countWords(doc);
     const score = pages * 1000 + words + bonus;
-    if (!best || score > best.score) best = { doc, bytes, score, textOnly };
+    const output = doc.report.reconstructed || doc.report.warnings.length || doc.dirty ? doc.save({ incremental: false }) : bytes;
+    if (!best || score > best.score) best = { doc, bytes: output, score, textOnly };
     return { pages, words };
   };
 

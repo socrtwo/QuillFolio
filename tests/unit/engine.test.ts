@@ -20,6 +20,12 @@ describe('filters and hashes', () => {
     const bin = new Uint8Array(5000); for (let i = 0; i < bin.length; i++) bin[i] = (i * 7919) & 255;
     expect(Array.from(inflateZlib(deflateZlib(bin)).data)).toEqual(Array.from(bin));
   });
+  it('recovers deflate data when the zlib header checksum is damaged', () => {
+    const data = enc.encode('Recover this content even with a damaged zlib header.');
+    const z = deflateZlib(data);
+    z[1] ^= 0x01;
+    expect(latin1(inflateZlib(z).data)).toBe(latin1(data));
+  });
   it('ascii filters', () => {
     expect(latin1(asciiHexDecode(enc.encode('48656C6C6F>')))).toBe('Hello');
     expect(latin1(ascii85Decode(enc.encode('87cURD]i,"Ebo80~>')))).toBe('Hello World!');
