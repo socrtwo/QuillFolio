@@ -11,7 +11,7 @@ import { listFonts, stats, hiddenInformation, sanitize, archivalCheck, accessibi
 import { repairPdf } from '../../src/pdf/repair';
 import { Lexer } from '../../src/pdf/lexer';
 
-const latin = (b: Uint8Array) => new TextDecoder('latin1').decode(b);
+const latin = (b: Uint8Array) => Array.from(b, (c) => String.fromCharCode(c)).join('');
 const bytes = (s: string) => new TextEncoder().encode(s);
 const latinBytes = (s: string) => Uint8Array.from(s, (c) => c.charCodeAt(0) & 0xff);
 
