@@ -1,0 +1,87 @@
+{
+  "name": "QuillFolio",
+  "short_name": "QuillFolio",
+  "description": "An open-source presentation app that opens and saves PowerPoint, OpenDocument and Markdown slides, with a complete, customizable command library.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
+  "background_color": "#ffffff",
+  "theme_color": "#8F3618",
+  "categories": [
+    "productivity",
+    "business",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "./",
+      "name": "Presentation",
+      "accept": {
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation": [
+          ".pptx"
+        ],
+        "application/vnd.ms-powerpoint.presentation.macroEnabled.12": [
+          ".pptm"
+        ],
+        "application/vnd.openxmlformats-officedocument.presentationml.slideshow": [
+          ".ppsx"
+        ],
+        "application/vnd.openxmlformats-officedocument.presentationml.template": [
+          ".potx"
+        ],
+        "application/vnd.ms-powerpoint": [
+          ".ppt",
+          ".pps",
+          ".pot"
+        ],
+        "application/vnd.oasis.opendocument.presentation": [
+          ".odp"
+        ],
+        "application/vnd.oasis.opendocument.flat-presentation": [
+          ".fodp"
+        ],
+        "text/markdown": [
+          ".md",
+          ".markdown"
+        ],
+        "application/x-quillfolio": [
+          ".qsp"
+        ],
+        "application/x-quillfolio-encrypted": [
+          ".qspe"
+        ]
+      }
+    }
+  ]
+}

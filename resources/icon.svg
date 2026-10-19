@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512"><defs><linearGradient id="gquillfolio" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#C9505C"/><stop offset="1" stop-color="#731C25"/></linearGradient></defs>
+  <rect width="512" height="512" rx="116" fill="url(#gquillfolio)"/><rect x="128" y="140" width="212" height="272" rx="20" fill="#fff" opacity=".55"/>
+      <path d="M104 140 h176 l60 60 v208 a20 20 0 0 1 -20 20 h-216 a20 20 0 0 1 -20 -20 v-248 a20 20 0 0 1 20 -20 z" fill="#fff"/>
+      <path d="M280 140 v40 a20 20 0 0 0 20 20 h40 z" fill="#A6303B" opacity=".85"/>
+      <g fill="#A6303B"><rect x="134" y="232" width="150" height="16" rx="8"/><rect x="134" y="268" width="170" height="16" rx="8"/><rect x="134" y="304" width="124" height="16" rx="8"/><rect x="134" y="340" width="156" height="16" rx="8"/><rect x="134" y="376" width="90" height="16" rx="8" opacity=".55"/></g><g>
+    <path d="M436 70 C 376 84 316 140 290 214 C 274 260 268 300 270 338 C 300 300 330 280 360 262 C 330 262 312 262 300 258 C 336 240 368 218 392 188 C 368 190 350 190 336 186 C 378 160 410 120 436 70 Z" fill="#fff" stroke="#731C25" stroke-width="8" stroke-linejoin="round"/>
+    <path d="M430 78 C 360 150 300 250 262 380" fill="none" stroke="#731C25" stroke-width="9" stroke-linecap="round"/>
+    <path d="M262 380 L252 420 L276 392 Z" fill="#731C25"/>
+  </g></svg>
