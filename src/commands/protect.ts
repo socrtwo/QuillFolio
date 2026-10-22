@@ -185,7 +185,7 @@ def([
       if (!res) return;
       audit(app, `Redactions applied: ${res.textRemoved} text run(s), ${res.imagesRemoved} image(s), ${res.areas} area(s)`);
       app.tab.ui.selectedAnnot = null;
-      toast(`Redacted: ${res.textRemoved} text run(s) and ${res.imagesRemoved} image(s) removed in ${res.areas} area(s). Save As a rewritten PDF so earlier versions are not kept.`, { ms: 8000, action: 'Save As', onAction: () => app.exec('file.saveAsFormat', 'pdf-rewrite') });
+      toast(`Redacted: ${res.textRemoved} text run(s) and ${res.imagesRemoved} image(s) removed in ${res.areas} area(s). Saving now rewrites the whole file, so the removed content does not survive in an earlier version inside it.`, { ms: 8000, action: 'Save', onAction: () => app.exec('file.save') });
     },
   },
   {

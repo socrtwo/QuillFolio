@@ -52,7 +52,9 @@ export function replaceRunText(doc: PdfDocument, p: PageInfo, run: EditableRun, 
   const font = ensureFont(doc, p, /Times|Serif|Roman|Georgia/i.test(fi.name) ? 'Times-Roman' : /Cour|Mono/i.test(fi.name) ? 'Courier' : 'Helvetica');
   const size = run.size || y1 - y0;
   const text: Op[] = [{ op: 'BT', args: [] }, { op: 'Tf', args: [Name.get(font), size] }, { op: 'rg', args: [0, 0, 0] }, { op: 'Td', args: [x0, y0 + (y1 - y0) * 0.22] }, { op: 'Tj', args: [new PdfString(bytesOf(newText))] }, { op: 'ET', args: [] }];
-  const all = [...ops, { op: 'q', args: [] }, ...white, ...text, { op: 'Q', args: [] }];
+  // The original content is wrapped in q…Q so its final transform, clip or text state (an invisible
+  // render mode, say) cannot affect the overlay.
+  const all = [{ op: 'q', args: [] }, ...ops, { op: 'Q', args: [] }, { op: 'q', args: [] }, ...white, ...text, { op: 'Q', args: [] }];
   doc.setPageContent(p, serializeContent(all));
   return { mode: 'overlaid' };
 }
@@ -65,7 +67,7 @@ export function eraseArea(doc: PdfDocument, p: PageInfo, area: [number, number, 
   let n = 0;
   for (const r of info.runs) if (inside(r.box)) { const op = ops[r.opIndex]; if (op.op === 'TJ') op.args[0] = []; else if (op.op === '"') op.args[2] = new PdfString(new Uint8Array(0)); else op.args[0] = new PdfString(new Uint8Array(0)); n++; }
   for (const im of info.images) if (inside(im.box)) { ops[im.opIndex] = { op: 'n', args: [] }; n++; }
-  const out = white ? [...ops, { op: 'q', args: [] }, ...rectOps(area[0], area[1], area[2] - area[0], area[3] - area[1], [1, 1, 1]), { op: 'Q', args: [] }] : ops;
+  const out = white ? [{ op: 'q', args: [] }, ...ops, { op: 'Q', args: [] }, { op: 'q', args: [] }, ...rectOps(area[0], area[1], area[2] - area[0], area[3] - area[1], [1, 1, 1]), { op: 'Q', args: [] }] : ops;
   doc.setPageContent(p, serializeContent(out));
   return n;
 }

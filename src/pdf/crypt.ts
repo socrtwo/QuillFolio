@@ -31,7 +31,18 @@ export function permissionBits(perm: Partial<Permissions>): number {
 export interface SecurityInfo { method: CryptMethod; stringMethod: CryptMethod; revision: number; keyLength: number; permissions: Permissions; ownerAccess: boolean; encryptMetadata: boolean }
 
 const padPassword = (pw: Uint8Array): Uint8Array => { const out = new Uint8Array(32); out.set(pw.subarray(0, 32)); if (pw.length < 32) out.set(PAD.subarray(0, 32 - pw.length), pw.length); return out; };
-const pwBytes = (pw: string): Uint8Array => { try { return new TextEncoder().encode(pw.normalize('NFKC')).subarray(0, 127); } catch { return bytesOf(pw); } };
+/**
+ * R5/R6 passwords are UTF-8 after SASLprep (RFC 4013): characters "commonly mapped to nothing"
+ * (soft hyphen, zero-width joiners, variation selectors …) are dropped, non-ASCII spaces become
+ * U+0020, then NFKC. Prohibited characters are not rejected; they simply fail to match.
+ */
+export function saslPrep(pw: string): string {
+  const mapped = pw
+    .replace(/[\u00AD\u034F\u1806\u180B-\u180D\u200B-\u200D\u2060\uFE00-\uFE0F\uFEFF]/g, '')
+    .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
+  try { return mapped.normalize('NFKC'); } catch { return mapped; }
+}
+const pwBytes = (pw: string): Uint8Array => { try { return new TextEncoder().encode(saslPrep(pw)).subarray(0, 127); } catch { return bytesOf(pw); } };
 const latinPw = (pw: string): Uint8Array => bytesOf(pw);
 
 /** Algorithm 2: the file encryption key from the user password (R2–R4). */
@@ -97,6 +108,10 @@ export class SecurityHandler {
   ownerAccess = false;
   identityStreams = false;
   identityStrings = false;
+  /** Method for embedded files (/EFF; defaults to the stream method). */
+  effMethod: CryptMethod = 'rc4';
+  /** False when the file was opened without its password because only the attachments are encrypted (AuthEvent EFOpen). */
+  keyKnown = true;
 
   constructor(public dict: Dict, private id0: Uint8Array, resolve: (o: PdfObj | undefined) => PdfObj) {
     const num = (k: string, d: number) => { const v = resolve(dict.get(k)); return typeof v === 'number' ? v : d; };
@@ -121,6 +136,8 @@ export class SecurityHandler {
       };
       this.method = methodOf(nameOf('StmF'));
       this.stringMethod = methodOf(nameOf('StrF'));
+      const eff = resolve(dict.get('EFF'));
+      this.effMethod = isName(eff) ? methodOf(eff.name) : this.method;
       this.identityStreams = this.method === 'none';
       this.identityStrings = this.stringMethod === 'none';
     }
@@ -141,14 +158,14 @@ export class SecurityHandler {
         const ik = hashR6(pw, uKeySalt, new Uint8Array(0), this.R);
         this.key = aesCbcDecryptNoPadZero(ik, UE);
         this.ownerAccess = false;
-        this.method = this.method === 'none' ? 'none' : 'aesv3'; this.stringMethod = this.stringMethod === 'none' ? 'none' : 'aesv3';
+        this.method = this.method === 'none' ? 'none' : 'aesv3'; this.stringMethod = this.stringMethod === 'none' ? 'none' : 'aesv3'; this.effMethod = this.effMethod === 'none' ? 'none' : 'aesv3';
         return true;
       }
       if (eq(hashR6(pw, oValidation, U.subarray(0, 48), this.R), O.subarray(0, 32))) {
         const ik = hashR6(pw, oKeySalt, U.subarray(0, 48), this.R);
         this.key = aesCbcDecryptNoPadZero(ik, OE);
         this.ownerAccess = true;
-        this.method = this.method === 'none' ? 'none' : 'aesv3'; this.stringMethod = this.stringMethod === 'none' ? 'none' : 'aesv3';
+        this.method = this.method === 'none' ? 'none' : 'aesv3'; this.stringMethod = this.stringMethod === 'none' ? 'none' : 'aesv3'; this.effMethod = this.effMethod === 'none' ? 'none' : 'aesv3';
         return true;
       }
       return false;
@@ -159,7 +176,7 @@ export class SecurityHandler {
       const n = this.R === 2 ? 32 : 16;
       for (let i = 0; i < n; i++) if (u[i] !== U[i]) return false;
       this.key = key;
-      if (this.V < 4) { this.method = 'rc4'; this.stringMethod = 'rc4'; }
+      if (this.V < 4) { this.method = 'rc4'; this.stringMethod = 'rc4'; this.effMethod = 'rc4'; }
       return true;
     };
     const pw = latinPw(password);
@@ -188,16 +205,16 @@ export class SecurityHandler {
     return h.subarray(0, Math.min(16, this.key.length + 5));
   }
 
-  decryptBytes(data: Uint8Array, ref: Ref, isString: boolean): Uint8Array {
-    const m = isString ? this.stringMethod : this.method;
+  decryptBytes(data: Uint8Array, ref: Ref, isString: boolean, method?: CryptMethod): Uint8Array {
+    const m = method ?? (isString ? this.stringMethod : this.method);
     if (m === 'none') return data;
     if (m === 'rc4') return rc4(this.objectKey(ref, false), data);
     if (m === 'aesv2') return aesCbcDecrypt(this.objectKey(ref, true), data);
     return aesCbcDecrypt(this.key, data);
   }
 
-  encryptBytes(data: Uint8Array, ref: Ref, isString: boolean): Uint8Array {
-    const m = isString ? this.stringMethod : this.method;
+  encryptBytes(data: Uint8Array, ref: Ref, isString: boolean, method?: CryptMethod): Uint8Array {
+    const m = method ?? (isString ? this.stringMethod : this.method);
     if (m === 'none') return data;
     if (m === 'rc4') return rc4(this.objectKey(ref, false), data);
     if (m === 'aesv2') return aesCbcEncrypt(this.objectKey(ref, true), data);
@@ -214,7 +231,9 @@ export class SecurityHandler {
       const isMeta = isName(type, 'Metadata') && !this.encryptMetadata;
       const d = this.decryptObject(obj.dict, ref) as Dict;
       const identity = this.hasIdentityCryptFilter(obj.dict);
-      return new PdfStream(d, isXref || isMeta || identity ? obj.raw : this.decryptBytes(obj.raw, ref, false));
+      const embedded = isName(type, 'EmbeddedFile');
+      if (isXref || isMeta || identity || (embedded && !this.keyKnown)) return new PdfStream(d, obj.raw);
+      return new PdfStream(d, this.decryptBytes(obj.raw, ref, false, embedded ? this.effMethod : undefined));
     }
     if (obj instanceof Dict) { const d = new Dict(); for (const [k, v] of obj.map) d.map.set(k, this.decryptObject(v, ref)); return d; }
     return obj;
@@ -233,9 +252,13 @@ export class SecurityHandler {
     if (obj instanceof PdfString) return new PdfString(this.encryptBytes(obj.bytes, ref, true), obj.hex);
     if (Array.isArray(obj)) return obj.map((o) => this.encryptObject(o, ref));
     if (obj instanceof PdfStream) {
-      if (isName(obj.dict.get('Type'), 'XRef')) return obj;
+      const type = obj.dict.get('Type');
+      // The mirror of decryptObject: what is stored in clear is written in clear.
+      if (isName(type, 'XRef')) return obj;
+      const embedded = isName(type, 'EmbeddedFile');
       const d = this.encryptObject(obj.dict, ref) as Dict;
-      const raw = this.encryptBytes(obj.raw, ref, false);
+      if ((isName(type, 'Metadata') && !this.encryptMetadata) || this.hasIdentityCryptFilter(obj.dict) || (embedded && !this.keyKnown)) return new PdfStream(d, obj.raw);
+      const raw = this.encryptBytes(obj.raw, ref, false, embedded ? this.effMethod : undefined);
       d.set('Length', raw.length);
       return new PdfStream(d, raw);
     }
@@ -261,7 +284,7 @@ export class SecurityHandler {
     const cf = new Dict({ StdCF: new Dict({ AuthEvent: Name.get('DocOpen'), CFM: Name.get('AESV3'), Length: 32 }) });
     const dict = new Dict({ Filter: Name.get('Standard'), V: 5, R: 6, Length: 256, P, CF: cf, StmF: Name.get('StdCF'), StrF: Name.get('StdCF'), O: new PdfString(O, true), U: new PdfString(U, true), OE: new PdfString(OE, true), UE: new PdfString(UE, true), Perms: new PdfString(Perms, true), EncryptMetadata: encryptMetadata });
     const h = new SecurityHandler(dict, id0, (x) => x ?? null);
-    h.key = key; h.method = 'aesv3'; h.stringMethod = 'aesv3'; h.R = 6; h.V = 5; h.P = P; h.ownerAccess = true; h.encryptMetadata = encryptMetadata;
+    h.key = key; h.method = 'aesv3'; h.stringMethod = 'aesv3'; h.effMethod = 'aesv3'; h.R = 6; h.V = 5; h.P = P; h.ownerAccess = true; h.encryptMetadata = encryptMetadata;
     return { dict, handler: h };
   }
 }

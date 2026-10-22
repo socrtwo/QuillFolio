@@ -47,88 +47,115 @@ export function md5(data: Uint8Array): Uint8Array {
 // SHA-256
 
 const K256 = new Uint32Array([0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5, 0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174, 0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da, 0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967, 0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85, 0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070, 0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3, 0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2]);
+const W256 = new Uint32Array(64);
 
 export function sha256(data: Uint8Array): Uint8Array {
   const len = data.length;
   const padded = new Uint8Array(((len + 8) >> 6) * 64 + 64);
   padded.set(data);
   padded[len] = 0x80;
-  const dv = new DataView(padded.buffer);
-  dv.setUint32(padded.length - 4, (len * 8) >>> 0);
-  dv.setUint32(padded.length - 8, Math.floor((len * 8) / 4294967296));
-  const H = new Uint32Array([0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19]);
-  const W = new Uint32Array(64);
-  const rotr = (x: number, n: number) => (x >>> n) | (x << (32 - n));
+  const bits = len * 8, hi = Math.floor(bits / 4294967296), lo = bits >>> 0, e0 = padded.length;
+  padded[e0 - 8] = hi >>> 24; padded[e0 - 7] = hi >>> 16; padded[e0 - 6] = hi >>> 8; padded[e0 - 5] = hi;
+  padded[e0 - 4] = lo >>> 24; padded[e0 - 3] = lo >>> 16; padded[e0 - 2] = lo >>> 8; padded[e0 - 1] = lo;
+  let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a, h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+  const W = W256;
   for (let off = 0; off < padded.length; off += 64) {
-    for (let i = 0; i < 16; i++) W[i] = dv.getUint32(off + i * 4);
+    for (let i = 0; i < 16; i++) { const p = off + i * 4; W[i] = (padded[p] << 24) | (padded[p + 1] << 16) | (padded[p + 2] << 8) | padded[p + 3]; }
     for (let i = 16; i < 64; i++) {
-      const s0 = rotr(W[i - 15], 7) ^ rotr(W[i - 15], 18) ^ (W[i - 15] >>> 3);
-      const s1 = rotr(W[i - 2], 17) ^ rotr(W[i - 2], 19) ^ (W[i - 2] >>> 10);
-      W[i] = (W[i - 16] + s0 + W[i - 7] + s1) >>> 0;
+      const x = W[i - 15], y = W[i - 2];
+      const s0 = ((x >>> 7) | (x << 25)) ^ ((x >>> 18) | (x << 14)) ^ (x >>> 3);
+      const s1 = ((y >>> 17) | (y << 15)) ^ ((y >>> 19) | (y << 13)) ^ (y >>> 10);
+      W[i] = (W[i - 16] + s0 + W[i - 7] + s1) | 0;
     }
-    let [a, b, c, d, e, f, g, h] = H;
+    let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
     for (let i = 0; i < 64; i++) {
-      const S1 = rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25);
-      const ch = (e & f) ^ (~e & g);
-      const t1 = (h + S1 + ch + K256[i] + W[i]) >>> 0;
-      const S0 = rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22);
-      const maj = (a & b) ^ (a & c) ^ (b & c);
-      const t2 = (S0 + maj) >>> 0;
-      h = g; g = f; f = e; e = (d + t1) >>> 0; d = c; c = b; b = a; a = (t1 + t2) >>> 0;
+      const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      const t1 = (h + S1 + ((e & f) ^ (~e & g)) + K256[i] + W[i]) | 0;
+      const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      const t2 = (S0 + ((a & b) ^ (a & c) ^ (b & c))) | 0;
+      h = g; g = f; f = e; e = (d + t1) | 0; d = c; c = b; b = a; a = (t1 + t2) | 0;
     }
-    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
-    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+    h0 = (h0 + a) | 0; h1 = (h1 + b) | 0; h2 = (h2 + c) | 0; h3 = (h3 + d) | 0; h4 = (h4 + e) | 0; h5 = (h5 + f) | 0; h6 = (h6 + g) | 0; h7 = (h7 + h) | 0;
   }
   const out = new Uint8Array(32);
-  const ov = new DataView(out.buffer);
-  for (let i = 0; i < 8; i++) ov.setUint32(i * 4, H[i]);
+  [h0, h1, h2, h3, h4, h5, h6, h7].forEach((v, i) => { out[i * 4] = v >>> 24; out[i * 4 + 1] = v >>> 16; out[i * 4 + 2] = v >>> 8; out[i * 4 + 3] = v; });
   return out;
 }
 
 // ------------------------------------------------------------------------------------------
-// SHA-384 / SHA-512 (64-bit arithmetic with BigInt; only used by the R6 password hash, rarely)
+// SHA-384 / SHA-512 on pairs of 32-bit words (high, low)
 
-const K512 = ['428a2f98d728ae22', '7137449123ef65cd', 'b5c0fbcfec4d3b2f', 'e9b5dba58189dbbc', '3956c25bf348b538', '59f111f1b605d019', '923f82a4af194f9b', 'ab1c5ed5da6d8118', 'd807aa98a3030242', '12835b0145706fbe', '243185be4ee4b28c', '550c7dc3d5ffb4e2', '72be5d74f27b896f', '80deb1fe3b1696b1', '9bdc06a725c71235', 'c19bf174cf692694', 'e49b69c19ef14ad2', 'efbe4786384f25e3', '0fc19dc68b8cd5b5', '240ca1cc77ac9c65', '2de92c6f592b0275', '4a7484aa6ea6e483', '5cb0a9dcbd41fbd4', '76f988da831153b5', '983e5152ee66dfab', 'a831c66d2db43210', 'b00327c898fb213f', 'bf597fc7beef0ee4', 'c6e00bf33da88fc2', 'd5a79147930aa725', '06ca6351e003826f', '142929670a0e6e70', '27b70a8546d22ffc', '2e1b21385c26c926', '4d2c6dfc5ac42aed', '53380d139d95b3df', '650a73548baf63de', '766a0abb3c77b2a8', '81c2c92e47edaee6', '92722c851482353b', 'a2bfe8a14cf10364', 'a81a664bbc423001', 'c24b8b70d0f89791', 'c76c51a30654be30', 'd192e819d6ef5218', 'd69906245565a910', 'f40e35855771202a', '106aa07032bbd1b8', '19a4c116b8d2d0c8', '1e376c085141ab53', '2748774cdf8eeb99', '34b0bcb5e19b48a8', '391c0cb3c5c95a63', '4ed8aa4ae3418acb', '5b9cca4f7763e373', '682e6ff3d6b2b8a3', '748f82ee5defb2fc', '78a5636f43172f60', '84c87814a1f0ab72', '8cc702081a6439ec', '90befffa23631e28', 'a4506cebde82bde9', 'bef9a3f7b2c67915', 'c67178f2e372532b', 'ca273eceea26619c', 'd186b8c721c0c207', 'eada7dd6cde0eb1e', 'f57d4f7fee6ed178', '06f067aa72176fba', '0a637dc5a2c898a6', '113f9804bef90dae', '1b710b35131c471b', '28db77f523047d84', '32caab7b40c72493', '3c9ebe0a15c9bebc', '431d67c49c100d4c', '4cc5d4becb3e42b6', '597f299cfc657e2a', '5fcb6fab3ad6faec', '6c44198c4a475817'].map((h) => BigInt('0x' + h));
-const M64 = (1n << 64n) - 1n;
+const K512 = new Uint32Array([
+  0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd, 0xb5c0fbcf, 0xec4d3b2f, 0xe9b5dba5, 0x8189dbbc, 0x3956c25b, 0xf348b538, 0x59f111f1, 0xb605d019, 0x923f82a4, 0xaf194f9b, 0xab1c5ed5, 0xda6d8118,
+  0xd807aa98, 0xa3030242, 0x12835b01, 0x45706fbe, 0x243185be, 0x4ee4b28c, 0x550c7dc3, 0xd5ffb4e2, 0x72be5d74, 0xf27b896f, 0x80deb1fe, 0x3b1696b1, 0x9bdc06a7, 0x25c71235, 0xc19bf174, 0xcf692694,
+  0xe49b69c1, 0x9ef14ad2, 0xefbe4786, 0x384f25e3, 0x0fc19dc6, 0x8b8cd5b5, 0x240ca1cc, 0x77ac9c65, 0x2de92c6f, 0x592b0275, 0x4a7484aa, 0x6ea6e483, 0x5cb0a9dc, 0xbd41fbd4, 0x76f988da, 0x831153b5,
+  0x983e5152, 0xee66dfab, 0xa831c66d, 0x2db43210, 0xb00327c8, 0x98fb213f, 0xbf597fc7, 0xbeef0ee4, 0xc6e00bf3, 0x3da88fc2, 0xd5a79147, 0x930aa725, 0x06ca6351, 0xe003826f, 0x14292967, 0x0a0e6e70,
+  0x27b70a85, 0x46d22ffc, 0x2e1b2138, 0x5c26c926, 0x4d2c6dfc, 0x5ac42aed, 0x53380d13, 0x9d95b3df, 0x650a7354, 0x8baf63de, 0x766a0abb, 0x3c77b2a8, 0x81c2c92e, 0x47edaee6, 0x92722c85, 0x1482353b,
+  0xa2bfe8a1, 0x4cf10364, 0xa81a664b, 0xbc423001, 0xc24b8b70, 0xd0f89791, 0xc76c51a3, 0x0654be30, 0xd192e819, 0xd6ef5218, 0xd6990624, 0x5565a910, 0xf40e3585, 0x5771202a, 0x106aa070, 0x32bbd1b8,
+  0x19a4c116, 0xb8d2d0c8, 0x1e376c08, 0x5141ab53, 0x2748774c, 0xdf8eeb99, 0x34b0bcb5, 0xe19b48a8, 0x391c0cb3, 0xc5c95a63, 0x4ed8aa4a, 0xe3418acb, 0x5b9cca4f, 0x7763e373, 0x682e6ff3, 0xd6b2b8a3,
+  0x748f82ee, 0x5defb2fc, 0x78a5636f, 0x43172f60, 0x84c87814, 0xa1f0ab72, 0x8cc70208, 0x1a6439ec, 0x90befffa, 0x23631e28, 0xa4506ceb, 0xde82bde9, 0xbef9a3f7, 0xb2c67915, 0xc67178f2, 0xe372532b,
+  0xca273ece, 0xea26619c, 0xd186b8c7, 0x21c0c207, 0xeada7dd6, 0xcde0eb1e, 0xf57d4f7f, 0xee6ed178, 0x06f067aa, 0x72176fba, 0x0a637dc5, 0xa2c898a6, 0x113f9804, 0xbef90dae, 0x1b710b35, 0x131c471b,
+  0x28db77f5, 0x23047d84, 0x32caab7b, 0x40c72493, 0x3c9ebe0a, 0x15c9bebc, 0x431d67c4, 0x9c100d4c, 0x4cc5d4be, 0xcb3e42b6, 0x597f299c, 0xfc657e2a, 0x5fcb6fab, 0x3ad6faec, 0x6c44198c, 0x4a475817,
+]);
+const W512 = new Int32Array(160);
 
-function sha512Core(data: Uint8Array, init: bigint[], outWords: number): Uint8Array {
+function sha512Core(data: Uint8Array, init: number[], outBytes: number): Uint8Array {
   const len = data.length;
   const padded = new Uint8Array(((len + 16) >> 7) * 128 + 128);
   padded.set(data);
   padded[len] = 0x80;
-  const dv = new DataView(padded.buffer);
-  dv.setBigUint64(padded.length - 8, BigInt(len) * 8n);
-  const H = [...init];
-  const W = new Array<bigint>(80);
-  const rotr = (x: bigint, n: bigint) => ((x >> n) | (x << (64n - n))) & M64;
+  const bits = len * 8, hi = Math.floor(bits / 4294967296), lo = bits >>> 0, e0 = padded.length;
+  padded[e0 - 8] = hi >>> 24; padded[e0 - 7] = hi >>> 16; padded[e0 - 6] = hi >>> 8; padded[e0 - 5] = hi;
+  padded[e0 - 4] = lo >>> 24; padded[e0 - 3] = lo >>> 16; padded[e0 - 2] = lo >>> 8; padded[e0 - 1] = lo;
+  const H = Int32Array.from(init);
+  const W = W512;
   for (let off = 0; off < padded.length; off += 128) {
-    for (let i = 0; i < 16; i++) W[i] = dv.getBigUint64(off + i * 8);
+    for (let i = 0; i < 32; i++) { const p = off + i * 4; W[i] = (padded[p] << 24) | (padded[p + 1] << 16) | (padded[p + 2] << 8) | padded[p + 3]; }
     for (let i = 16; i < 80; i++) {
-      const s0 = rotr(W[i - 15], 1n) ^ rotr(W[i - 15], 8n) ^ (W[i - 15] >> 7n);
-      const s1 = rotr(W[i - 2], 19n) ^ rotr(W[i - 2], 61n) ^ (W[i - 2] >> 6n);
-      W[i] = (W[i - 16] + s0 + W[i - 7] + s1) & M64;
+      // σ0(W[i-15]) = rotr1 ^ rotr8 ^ shr7 ; σ1(W[i-2]) = rotr19 ^ rotr61 ^ shr6
+      const xh = W[(i - 15) * 2], xl = W[(i - 15) * 2 + 1];
+      const s0h = ((xh >>> 1) | (xl << 31)) ^ ((xh >>> 8) | (xl << 24)) ^ (xh >>> 7);
+      const s0l = ((xl >>> 1) | (xh << 31)) ^ ((xl >>> 8) | (xh << 24)) ^ ((xl >>> 7) | (xh << 25));
+      const yh = W[(i - 2) * 2], yl = W[(i - 2) * 2 + 1];
+      const s1h = ((yh >>> 19) | (yl << 13)) ^ ((yl >>> 29) | (yh << 3)) ^ (yh >>> 6);
+      const s1l = ((yl >>> 19) | (yh << 13)) ^ ((yh >>> 29) | (yl << 3)) ^ ((yl >>> 6) | (yh << 26));
+      let l = (W[(i - 16) * 2 + 1] >>> 0) + (s0l >>> 0) + (W[(i - 7) * 2 + 1] >>> 0) + (s1l >>> 0);
+      let h = W[(i - 16) * 2] + s0h + W[(i - 7) * 2] + s1h + Math.floor(l / 4294967296);
+      W[i * 2] = h | 0; W[i * 2 + 1] = l | 0;
     }
-    let [a, b, c, d, e, f, g, h] = H;
+    let ah = H[0], al = H[1], bh = H[2], bl = H[3], ch = H[4], cl = H[5], dh = H[6], dl = H[7];
+    let eh = H[8], el = H[9], fh = H[10], fl = H[11], gh = H[12], gl = H[13], hh = H[14], hl = H[15];
     for (let i = 0; i < 80; i++) {
-      const S1 = rotr(e, 14n) ^ rotr(e, 18n) ^ rotr(e, 41n);
-      const ch = (e & f) ^ (~e & M64 & g);
-      const t1 = (h + S1 + ch + K512[i] + W[i]) & M64;
-      const S0 = rotr(a, 28n) ^ rotr(a, 34n) ^ rotr(a, 39n);
-      const maj = (a & b) ^ (a & c) ^ (b & c);
-      const t2 = (S0 + maj) & M64;
-      h = g; g = f; f = e; e = (d + t1) & M64; d = c; c = b; b = a; a = (t1 + t2) & M64;
+      // Σ1(e) = rotr14 ^ rotr18 ^ rotr41
+      const S1h = ((eh >>> 14) | (el << 18)) ^ ((eh >>> 18) | (el << 14)) ^ ((el >>> 9) | (eh << 23));
+      const S1l = ((el >>> 14) | (eh << 18)) ^ ((el >>> 18) | (eh << 14)) ^ ((eh >>> 9) | (el << 23));
+      const chh = (eh & fh) ^ (~eh & gh), chl = (el & fl) ^ (~el & gl);
+      let l = (hl >>> 0) + (S1l >>> 0) + (chl >>> 0) + K512[i * 2 + 1] + (W[i * 2 + 1] >>> 0);
+      const t1h = (hh + S1h + chh + K512[i * 2] + W[i * 2] + Math.floor(l / 4294967296)) | 0;
+      const t1l = l | 0;
+      // Σ0(a) = rotr28 ^ rotr34 ^ rotr39
+      const S0h = ((ah >>> 28) | (al << 4)) ^ ((al >>> 2) | (ah << 30)) ^ ((al >>> 7) | (ah << 25));
+      const S0l = ((al >>> 28) | (ah << 4)) ^ ((ah >>> 2) | (al << 30)) ^ ((ah >>> 7) | (al << 25));
+      const mjh = (ah & bh) ^ (ah & ch) ^ (bh & ch), mjl = (al & bl) ^ (al & cl) ^ (bl & cl);
+      l = (S0l >>> 0) + (mjl >>> 0);
+      const t2h = (S0h + mjh + Math.floor(l / 4294967296)) | 0, t2l = l | 0;
+      hh = gh; hl = gl; gh = fh; gl = fl; fh = eh; fl = el;
+      l = (dl >>> 0) + (t1l >>> 0);
+      eh = (dh + t1h + Math.floor(l / 4294967296)) | 0; el = l | 0;
+      dh = ch; dl = cl; ch = bh; cl = bl; bh = ah; bl = al;
+      l = (t1l >>> 0) + (t2l >>> 0);
+      ah = (t1h + t2h + Math.floor(l / 4294967296)) | 0; al = l | 0;
     }
-    H[0] = (H[0] + a) & M64; H[1] = (H[1] + b) & M64; H[2] = (H[2] + c) & M64; H[3] = (H[3] + d) & M64;
-    H[4] = (H[4] + e) & M64; H[5] = (H[5] + f) & M64; H[6] = (H[6] + g) & M64; H[7] = (H[7] + h) & M64;
+    const add = (k: number, xh: number, xl: number) => { const l = (H[k + 1] >>> 0) + (xl >>> 0); H[k] = (H[k] + xh + Math.floor(l / 4294967296)) | 0; H[k + 1] = l | 0; };
+    add(0, ah, al); add(2, bh, bl); add(4, ch, cl); add(6, dh, dl); add(8, eh, el); add(10, fh, fl); add(12, gh, gl); add(14, hh, hl);
   }
-  const out = new Uint8Array(outWords * 8);
-  const ov = new DataView(out.buffer);
-  for (let i = 0; i < outWords; i++) ov.setBigUint64(i * 8, H[i]);
+  const out = new Uint8Array(outBytes);
+  for (let i = 0; i < outBytes; i++) out[i] = (H[i >> 2] >>> (24 - (i & 3) * 8)) & 255;
   return out;
 }
 
-export const sha384 = (d: Uint8Array): Uint8Array => sha512Core(d, ['cbbb9d5dc1059ed8', '629a292a367cd507', '9159015a3070dd17', '152fecd8f70e5939', '67332667ffc00b31', '8eb44a8768581511', 'db0c2e0d64f98fa7', '47b5481dbefa4fa4'].map((h) => BigInt('0x' + h)), 6);
-export const sha512 = (d: Uint8Array): Uint8Array => sha512Core(d, ['6a09e667f3bcc908', 'bb67ae8584caa73b', '3c6ef372fe94f82b', 'a54ff53a5f1d36f1', '510e527fade682d1', '9b05688c2b3e6c1f', '1f83d9abfb41bd6b', '5be0cd19137e2179'].map((h) => BigInt('0x' + h)), 8);
+export const sha384 = (d: Uint8Array): Uint8Array => sha512Core(d, [0xcbbb9d5d, 0xc1059ed8, 0x629a292a, 0x367cd507, 0x9159015a, 0x3070dd17, 0x152fecd8, 0xf70e5939, 0x67332667, 0xffc00b31, 0x8eb44a87, 0x68581511, 0xdb0c2e0d, 0x64f98fa7, 0x47b5481d, 0xbefa4fa4], 48);
+export const sha512 = (d: Uint8Array): Uint8Array => sha512Core(d, [0x6a09e667, 0xf3bcc908, 0xbb67ae85, 0x84caa73b, 0x3c6ef372, 0xfe94f82b, 0xa54ff53a, 0x5f1d36f1, 0x510e527f, 0xade682d1, 0x9b05688c, 0x2b3e6c1f, 0x1f83d9ab, 0xfb41bd6b, 0x5be0cd19, 0x137e2179], 64);
 
 // ------------------------------------------------------------------------------------------
 // RC4
@@ -147,9 +174,11 @@ export function rc4(key: Uint8Array, data: Uint8Array): Uint8Array {
 }
 
 // ------------------------------------------------------------------------------------------
-// AES (FIPS 197), CBC mode
+// AES (FIPS 197) with 32-bit lookup tables, CBC mode
 
 const SBOX = new Uint8Array(256), INV_SBOX = new Uint8Array(256);
+const TE0 = new Uint32Array(256), TE1 = new Uint32Array(256), TE2 = new Uint32Array(256), TE3 = new Uint32Array(256);
+const TD0 = new Uint32Array(256), TD1 = new Uint32Array(256), TD2 = new Uint32Array(256), TD3 = new Uint32Array(256);
 (() => {
   let p = 1, q = 1;
   do {
@@ -160,99 +189,120 @@ const SBOX = new Uint8Array(256), INV_SBOX = new Uint8Array(256);
   } while (p !== 1);
   SBOX[0] = 0x63;
   for (let i = 0; i < 256; i++) INV_SBOX[SBOX[i]] = i;
+  const xt = (x: number) => ((x << 1) ^ (x & 0x80 ? 0x1b : 0)) & 0xff;
+  const ror8 = (v: number) => ((v >>> 8) | (v << 24)) >>> 0;
+  for (let x = 0; x < 256; x++) {
+    const s = SBOX[x], s2 = xt(s), s3 = s2 ^ s;
+    const e = ((s2 << 24) | (s << 16) | (s << 8) | s3) >>> 0;
+    TE0[x] = e; TE1[x] = ror8(e); TE2[x] = ror8(TE1[x]); TE3[x] = ror8(TE2[x]);
+    const v = INV_SBOX[x], v2 = xt(v), v4 = xt(v2), v8 = xt(v4);
+    const v9 = v8 ^ v, v11 = v8 ^ v2 ^ v, v13 = v8 ^ v4 ^ v, v14 = v8 ^ v4 ^ v2;
+    const d = ((v14 << 24) | (v9 << 16) | (v13 << 8) | v11) >>> 0;
+    TD0[x] = d; TD1[x] = ror8(d); TD2[x] = ror8(TD1[x]); TD3[x] = ror8(TD2[x]);
+  }
 })();
-const xtime = (x: number) => ((x << 1) ^ (x & 0x80 ? 0x1b : 0)) & 0xff;
-const mul = (a: number, b: number) => { let r = 0; while (b) { if (b & 1) r ^= a; a = xtime(a); b >>= 1; } return r; };
 
-function expandKey(key: Uint8Array): Uint8Array[] {
-  const nk = key.length / 4, rounds = nk + 6;
-  const w: number[][] = [];
-  for (let i = 0; i < nk; i++) w.push([key[4 * i], key[4 * i + 1], key[4 * i + 2], key[4 * i + 3]]);
+interface AesKey { enc: Uint32Array; dec: Uint32Array; rounds: number }
+const keyCache = new Map<string, AesKey>();
+
+function expandKey(key: Uint8Array): AesKey {
+  const id = String.fromCharCode(...key);
+  const hit = keyCache.get(id);
+  if (hit) return hit;
+  const nk = key.length >> 2, rounds = nk + 6, total = 4 * (rounds + 1);
+  const w = new Uint32Array(total);
+  for (let i = 0; i < nk; i++) w[i] = ((key[4 * i] << 24) | (key[4 * i + 1] << 16) | (key[4 * i + 2] << 8) | key[4 * i + 3]) >>> 0;
   let rcon = 1;
-  for (let i = nk; i < 4 * (rounds + 1); i++) {
-    let t = [...w[i - 1]];
-    if (i % nk === 0) { t = [SBOX[t[1]] ^ rcon, SBOX[t[2]], SBOX[t[3]], SBOX[t[0]]]; rcon = xtime(rcon); }
-    else if (nk > 6 && i % nk === 4) t = t.map((b) => SBOX[b]);
-    w.push(w[i - nk].map((b, k) => b ^ t[k]));
+  for (let i = nk; i < total; i++) {
+    let t = w[i - 1];
+    if (i % nk === 0) {
+      t = ((SBOX[(t >>> 16) & 255] << 24) | (SBOX[(t >>> 8) & 255] << 16) | (SBOX[t & 255] << 8) | SBOX[t >>> 24]) ^ (rcon << 24);
+      rcon = ((rcon << 1) ^ (rcon & 0x80 ? 0x1b : 0)) & 0xff;
+    } else if (nk > 6 && i % nk === 4) t = (SBOX[t >>> 24] << 24) | (SBOX[(t >>> 16) & 255] << 16) | (SBOX[(t >>> 8) & 255] << 8) | SBOX[t & 255];
+    w[i] = (w[i - nk] ^ t) >>> 0;
   }
-  const out: Uint8Array[] = [];
-  for (let r = 0; r <= rounds; r++) out.push(Uint8Array.from(w.slice(4 * r, 4 * r + 4).flat()));
-  return out;
-}
-
-function encryptBlock(rk: Uint8Array[], block: Uint8Array): Uint8Array {
-  const s = block.slice();
-  const add = (k: Uint8Array) => { for (let i = 0; i < 16; i++) s[i] ^= k[i]; };
-  add(rk[0]);
-  const rounds = rk.length - 1;
-  for (let r = 1; r <= rounds; r++) {
-    for (let i = 0; i < 16; i++) s[i] = SBOX[s[i]];
-    // ShiftRows (state is column-major: s[c*4 + r])
-    const t = s.slice();
-    for (let c = 0; c < 4; c++) for (let row = 0; row < 4; row++) s[c * 4 + row] = t[((c + row) % 4) * 4 + row];
-    if (r !== rounds) {
-      for (let c = 0; c < 4; c++) {
-        const a0 = s[c * 4], a1 = s[c * 4 + 1], a2 = s[c * 4 + 2], a3 = s[c * 4 + 3];
-        s[c * 4] = mul(a0, 2) ^ mul(a1, 3) ^ a2 ^ a3;
-        s[c * 4 + 1] = a0 ^ mul(a1, 2) ^ mul(a2, 3) ^ a3;
-        s[c * 4 + 2] = a0 ^ a1 ^ mul(a2, 2) ^ mul(a3, 3);
-        s[c * 4 + 3] = mul(a0, 3) ^ a1 ^ a2 ^ mul(a3, 2);
-      }
-    }
-    add(rk[r]);
-  }
-  return s;
-}
-
-function decryptBlock(rk: Uint8Array[], block: Uint8Array): Uint8Array {
-  const s = block.slice();
-  const add = (k: Uint8Array) => { for (let i = 0; i < 16; i++) s[i] ^= k[i]; };
-  const rounds = rk.length - 1;
-  add(rk[rounds]);
-  for (let r = rounds - 1; r >= 0; r--) {
-    const t = s.slice();
-    for (let c = 0; c < 4; c++) for (let row = 0; row < 4; row++) s[((c + row) % 4) * 4 + row] = t[c * 4 + row];
-    for (let i = 0; i < 16; i++) s[i] = INV_SBOX[s[i]];
-    add(rk[r]);
-    if (r !== 0) {
-      for (let c = 0; c < 4; c++) {
-        const a0 = s[c * 4], a1 = s[c * 4 + 1], a2 = s[c * 4 + 2], a3 = s[c * 4 + 3];
-        s[c * 4] = mul(a0, 14) ^ mul(a1, 11) ^ mul(a2, 13) ^ mul(a3, 9);
-        s[c * 4 + 1] = mul(a0, 9) ^ mul(a1, 14) ^ mul(a2, 11) ^ mul(a3, 13);
-        s[c * 4 + 2] = mul(a0, 13) ^ mul(a1, 9) ^ mul(a2, 14) ^ mul(a3, 11);
-        s[c * 4 + 3] = mul(a0, 11) ^ mul(a1, 13) ^ mul(a2, 9) ^ mul(a3, 14);
-      }
+  // Decryption keys for the equivalent inverse cipher: reversed rounds, InvMixColumns on the inner ones.
+  const dec = new Uint32Array(total);
+  for (let r = 0; r <= rounds; r++) {
+    for (let c = 0; c < 4; c++) {
+      const v = w[(rounds - r) * 4 + c];
+      dec[r * 4 + c] = r === 0 || r === rounds ? v : (TD0[SBOX[v >>> 24]] ^ TD1[SBOX[(v >>> 16) & 255]] ^ TD2[SBOX[(v >>> 8) & 255]] ^ TD3[SBOX[v & 255]]) >>> 0;
     }
   }
-  return s;
+  const k = { enc: w, dec, rounds };
+  if (keyCache.size > 64) keyCache.clear();
+  keyCache.set(id, k);
+  return k;
 }
+
+/** Encrypts one 16-byte block in place: in[o..o+16) → out[o..o+16). */
+function encBlock(k: AesKey, src: Uint8Array, so: number, dst: Uint8Array, dof: number): void {
+  const rk = k.enc;
+  let s0 = ((src[so] << 24) | (src[so + 1] << 16) | (src[so + 2] << 8) | src[so + 3]) ^ rk[0];
+  let s1 = ((src[so + 4] << 24) | (src[so + 5] << 16) | (src[so + 6] << 8) | src[so + 7]) ^ rk[1];
+  let s2 = ((src[so + 8] << 24) | (src[so + 9] << 16) | (src[so + 10] << 8) | src[so + 11]) ^ rk[2];
+  let s3 = ((src[so + 12] << 24) | (src[so + 13] << 16) | (src[so + 14] << 8) | src[so + 15]) ^ rk[3];
+  let r = 4;
+  for (let round = 1; round < k.rounds; round++, r += 4) {
+    const t0 = TE0[s0 >>> 24] ^ TE1[(s1 >>> 16) & 255] ^ TE2[(s2 >>> 8) & 255] ^ TE3[s3 & 255] ^ rk[r];
+    const t1 = TE0[s1 >>> 24] ^ TE1[(s2 >>> 16) & 255] ^ TE2[(s3 >>> 8) & 255] ^ TE3[s0 & 255] ^ rk[r + 1];
+    const t2 = TE0[s2 >>> 24] ^ TE1[(s3 >>> 16) & 255] ^ TE2[(s0 >>> 8) & 255] ^ TE3[s1 & 255] ^ rk[r + 2];
+    const t3 = TE0[s3 >>> 24] ^ TE1[(s0 >>> 16) & 255] ^ TE2[(s1 >>> 8) & 255] ^ TE3[s2 & 255] ^ rk[r + 3];
+    s0 = t0; s1 = t1; s2 = t2; s3 = t3;
+  }
+  const o0 = ((SBOX[s0 >>> 24] << 24) | (SBOX[(s1 >>> 16) & 255] << 16) | (SBOX[(s2 >>> 8) & 255] << 8) | SBOX[s3 & 255]) ^ rk[r];
+  const o1 = ((SBOX[s1 >>> 24] << 24) | (SBOX[(s2 >>> 16) & 255] << 16) | (SBOX[(s3 >>> 8) & 255] << 8) | SBOX[s0 & 255]) ^ rk[r + 1];
+  const o2 = ((SBOX[s2 >>> 24] << 24) | (SBOX[(s3 >>> 16) & 255] << 16) | (SBOX[(s0 >>> 8) & 255] << 8) | SBOX[s1 & 255]) ^ rk[r + 2];
+  const o3 = ((SBOX[s3 >>> 24] << 24) | (SBOX[(s0 >>> 16) & 255] << 16) | (SBOX[(s1 >>> 8) & 255] << 8) | SBOX[s2 & 255]) ^ rk[r + 3];
+  put(dst, dof, o0); put(dst, dof + 4, o1); put(dst, dof + 8, o2); put(dst, dof + 12, o3);
+}
+
+function decBlock(k: AesKey, src: Uint8Array, so: number, dst: Uint8Array, dof: number): void {
+  const rk = k.dec;
+  let s0 = ((src[so] << 24) | (src[so + 1] << 16) | (src[so + 2] << 8) | src[so + 3]) ^ rk[0];
+  let s1 = ((src[so + 4] << 24) | (src[so + 5] << 16) | (src[so + 6] << 8) | src[so + 7]) ^ rk[1];
+  let s2 = ((src[so + 8] << 24) | (src[so + 9] << 16) | (src[so + 10] << 8) | src[so + 11]) ^ rk[2];
+  let s3 = ((src[so + 12] << 24) | (src[so + 13] << 16) | (src[so + 14] << 8) | src[so + 15]) ^ rk[3];
+  let r = 4;
+  for (let round = 1; round < k.rounds; round++, r += 4) {
+    const t0 = TD0[s0 >>> 24] ^ TD1[(s3 >>> 16) & 255] ^ TD2[(s2 >>> 8) & 255] ^ TD3[s1 & 255] ^ rk[r];
+    const t1 = TD0[s1 >>> 24] ^ TD1[(s0 >>> 16) & 255] ^ TD2[(s3 >>> 8) & 255] ^ TD3[s2 & 255] ^ rk[r + 1];
+    const t2 = TD0[s2 >>> 24] ^ TD1[(s1 >>> 16) & 255] ^ TD2[(s0 >>> 8) & 255] ^ TD3[s3 & 255] ^ rk[r + 2];
+    const t3 = TD0[s3 >>> 24] ^ TD1[(s2 >>> 16) & 255] ^ TD2[(s1 >>> 8) & 255] ^ TD3[s0 & 255] ^ rk[r + 3];
+    s0 = t0; s1 = t1; s2 = t2; s3 = t3;
+  }
+  const o0 = ((INV_SBOX[s0 >>> 24] << 24) | (INV_SBOX[(s3 >>> 16) & 255] << 16) | (INV_SBOX[(s2 >>> 8) & 255] << 8) | INV_SBOX[s1 & 255]) ^ rk[r];
+  const o1 = ((INV_SBOX[s1 >>> 24] << 24) | (INV_SBOX[(s0 >>> 16) & 255] << 16) | (INV_SBOX[(s3 >>> 8) & 255] << 8) | INV_SBOX[s2 & 255]) ^ rk[r + 1];
+  const o2 = ((INV_SBOX[s2 >>> 24] << 24) | (INV_SBOX[(s1 >>> 16) & 255] << 16) | (INV_SBOX[(s0 >>> 8) & 255] << 8) | INV_SBOX[s3 & 255]) ^ rk[r + 2];
+  const o3 = ((INV_SBOX[s3 >>> 24] << 24) | (INV_SBOX[(s2 >>> 16) & 255] << 16) | (INV_SBOX[(s1 >>> 8) & 255] << 8) | INV_SBOX[s0 & 255]) ^ rk[r + 3];
+  put(dst, dof, o0); put(dst, dof + 4, o1); put(dst, dof + 8, o2); put(dst, dof + 12, o3);
+}
+
+function put(b: Uint8Array, o: number, v: number): void { b[o] = v >>> 24; b[o + 1] = v >>> 16; b[o + 2] = v >>> 8; b[o + 3] = v; }
 
 /** AES-CBC without padding (data length must be a multiple of 16). */
 export function aesCbcEncryptNoPad(key: Uint8Array, iv: Uint8Array, data: Uint8Array): Uint8Array {
-  const rk = expandKey(key);
-  const out = new Uint8Array(data.length);
-  let prev = iv;
-  for (let o = 0; o + 16 <= data.length; o += 16) {
-    const blk = data.slice(o, o + 16);
-    for (let i = 0; i < 16; i++) blk[i] ^= prev[i];
-    const enc = encryptBlock(rk, blk);
-    out.set(enc, o);
-    prev = enc;
+  const k = expandKey(key);
+  const n = data.length - (data.length % 16);
+  const out = new Uint8Array(n);
+  const blk = new Uint8Array(16);
+  for (let i = 0; i < 16; i++) blk[i] = iv[i] ?? 0;
+  for (let o = 0; o < n; o += 16) {
+    for (let i = 0; i < 16; i++) blk[i] ^= data[o + i];
+    encBlock(k, blk, 0, out, o);
+    for (let i = 0; i < 16; i++) blk[i] = out[o + i];
   }
   return out;
 }
 
 export function aesCbcDecryptNoPad(key: Uint8Array, iv: Uint8Array, data: Uint8Array): Uint8Array {
-  const rk = expandKey(key);
+  const k = expandKey(key);
   const n = data.length - (data.length % 16);
   const out = new Uint8Array(n);
-  let prev = iv;
-  for (let o = 0; o + 16 <= n; o += 16) {
-    const blk = data.subarray(o, o + 16);
-    const dec = decryptBlock(rk, blk);
-    for (let i = 0; i < 16; i++) dec[i] ^= prev[i];
-    out.set(dec, o);
-    prev = blk;
+  for (let o = 0; o < n; o += 16) {
+    decBlock(k, data, o, out, o);
+    if (o === 0) for (let i = 0; i < 16; i++) out[i] ^= iv[i] ?? 0;
+    else for (let i = 0; i < 16; i++) out[o + i] ^= data[o - 16 + i];
   }
   return out;
 }
@@ -278,8 +328,8 @@ export function aesCbcDecrypt(key: Uint8Array, data: Uint8Array): Uint8Array {
   return dec;
 }
 
-/** AES-ECB of one block (used by the R6 hash when no IV is wanted: handled by CBC with a zero IV). */
-export function aesEncryptBlock(key: Uint8Array, block: Uint8Array): Uint8Array { return encryptBlock(expandKey(key), block); }
+/** AES-ECB of one block. */
+export function aesEncryptBlock(key: Uint8Array, block: Uint8Array): Uint8Array { const out = new Uint8Array(16); encBlock(expandKey(key), block, 0, out, 0); return out; }
 
 export function randomBytes(n: number): Uint8Array {
   const b = new Uint8Array(n);

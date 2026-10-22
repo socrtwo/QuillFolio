@@ -73,7 +73,34 @@ export function lit(bytes: Uint8Array): string {
 export const litText = (s: string): string => lit(winAnsiBytes(s));
 
 /** Appends a new blank page (optionally at an index) and returns its PageInfo. */
+/**
+ * Makes sure the catalog's /Pages is a real page tree node. Damaged or minimal files sometimes point it
+ * straight at a single page (viewers cope); editing such a tree would turn the page into its own parent.
+ */
+export function ensurePagesRoot(doc: PdfDocument): void {
+  const root = doc.pagesRoot, ref = doc.pagesRootRef;
+  if (root && ref && doc.getName(root, 'Type') !== 'Page' && (root.has('Kids') || doc.getName(root, 'Type') === 'Pages')) return;
+  const pages = doc.pages;
+  const kids = pages.map((p) => p.ref).filter((r): r is Ref => !!r);
+  const newRef = doc.register(new Dict({ Type: Name.get('Pages'), Kids: kids, Count: kids.length }));
+  for (const p of pages) {
+    if (!p.ref) continue;
+    // Inherited attributes become explicit before the page changes parent.
+    const inh = p.inherited || {};
+    if (!p.dict.has('MediaBox')) p.dict.set('MediaBox', inh.mediaBox !== undefined ? inh.mediaBox : [...p.mediaBox]);
+    if (!p.dict.has('Resources') && inh.resources !== undefined) p.dict.set('Resources', inh.resources);
+    if (!p.dict.has('CropBox') && inh.cropBox !== undefined) p.dict.set('CropBox', inh.cropBox);
+    if (!p.dict.has('Rotate') && inh.rotate !== undefined) p.dict.set('Rotate', inh.rotate);
+    p.dict.set('Parent', newRef);
+    doc.touch(p.ref);
+  }
+  doc.catalog.set('Pages', newRef);
+  doc.update(doc.catalogRef, doc.catalog);
+  doc.invalidatePages();
+}
+
 export function addBlankPage(doc: PdfDocument, size: [number, number] = PAPER.letter, at?: number): PageInfo {
+  if (doc.pagesRootRef) ensurePagesRoot(doc);
   const pagesRef = doc.pagesRootRef || doc.register(new Dict({ Type: Name.get('Pages'), Kids: [], Count: 0 }));
   if (!doc.pagesRootRef) { doc.catalog.set('Pages', pagesRef); doc.update(doc.catalogRef, doc.catalog); }
   const root = doc.resolve<Dict>(pagesRef);
@@ -85,7 +112,8 @@ export function addBlankPage(doc: PdfDocument, size: [number, number] = PAPER.le
   root.set('Count', doc.getNum(root, 'Count') + 1);
   // Parent chain counts
   let parent = doc.getDict(root, 'Parent'); let pref = root.get('Parent');
-  while (parent) { parent.set('Count', doc.getNum(parent, 'Count') + 1); if (pref instanceof Ref) doc.touch(pref); pref = parent.get('Parent'); parent = doc.getDict(parent, 'Parent'); }
+  const seen = new Set<Dict>([root]);
+  while (parent && !seen.has(parent)) { seen.add(parent); parent.set('Count', doc.getNum(parent, 'Count') + 1); if (pref instanceof Ref) doc.touch(pref); pref = parent.get('Parent'); parent = doc.getDict(parent, 'Parent'); }
   doc.update(pagesRef, root);
   doc.invalidatePages();
   return doc.pages.find((p) => p.ref?.num === ref.num)!;

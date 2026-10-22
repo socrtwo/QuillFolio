@@ -6,6 +6,7 @@
  */
 import { Dict, Name, PdfObj, PdfStream, PdfString, Ref, isName, nameObj } from '../objects';
 import { PdfDocument } from '../document';
+import { nameText } from '../writer';
 import { readAttachments, readLayers, readMetadata, pageAnnotations, readFields, readOutlines } from '../structure';
 import { IMAGE_FILTERS } from '../filters';
 
@@ -46,7 +47,7 @@ export function listFonts(doc: PdfDocument): FontUse[] {
       const ref = fonts.get(k);
       const f = doc.resolve<Dict | null>(ref);
       if (!(f instanceof Dict)) continue;
-      const base = doc.getName(f, 'BaseFont') || k;
+      const base = nameText(doc.getName(f, 'BaseFont')) || k;
       const key = ref instanceof Ref ? `R${ref.num}` : base;
       let fd = doc.getDict(f, 'FontDescriptor');
       const desc = doc.getArray(f, 'DescendantFonts');
@@ -149,6 +150,8 @@ export function sanitize(doc: PdfDocument, o: SanitizeOptions): string[] {
   if (o.privateData) { cat.delete('PieceInfo'); for (const p of doc.pages) if (p.dict.has('PieceInfo')) { p.dict.delete('PieceInfo'); if (p.ref) doc.touch(p.ref); } done.push('private application data'); }
   if (o.embeddedSearchIndex) { const names = doc.getDict(cat, 'Names'); if (names) names.delete('EmbeddedSearch'); }
   doc.update(doc.catalogRef, cat);
+  // What was removed must not stay in the original bytes of the file.
+  if (done.length) doc.mustRewrite = true;
   return done;
 }
 

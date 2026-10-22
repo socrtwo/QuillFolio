@@ -259,7 +259,7 @@ export function addLink(doc: PdfDocument, p: PageInfo, rect: Rect, target: { url
 }
 
 export function addFileAttachmentAnnot(doc: PdfDocument, p: PageInfo, x: number, y: number, name: string, data: Uint8Array, o: AnnotBase & { mime?: string } = {}): Ref {
-  const stream = flateStream(data, { Type: Name.get('EmbeddedFile'), Subtype: Name.get((o.mime || 'application/octet-stream').replace('/', '#2F')), Params: new Dict({ Size: data.length, ModDate: pdfDate() }) });
+  const stream = flateStream(data, { Type: Name.get('EmbeddedFile'), Subtype: Name.get(o.mime || 'application/octet-stream'), Params: new Dict({ Size: data.length, ModDate: pdfDate() }) });
   const sref = doc.register(stream);
   const fs = new Dict({ Type: Name.get('Filespec'), F: PdfString.fromText(name), UF: PdfString.fromText(name, true), EF: new Dict({ F: sref, UF: sref }) });
   const d = baseDict('FileAttachment', [x, y - 20, x + 16, y], { ...o, color: o.color || [0.3, 0.5, 0.9], contents: o.contents || name });
@@ -378,11 +378,24 @@ export function applyRedactions(doc: PdfDocument, indexes: number[], extra: Map<
     const ops = parseContent(doc.pageContent(p));
     const info = analyzeContent(doc, ops, p.resources);
     const drop = new Set<number>();
-    for (const run of info.runs) if (rects.some((r) => rectsOverlap(r, run.box))) { drop.add(run.opIndex); result.textRemoved++; }
+    const advance = new Map<number, number>();
+    for (const run of info.runs) if (rects.some((r) => rectsOverlap(r, run.box))) { drop.add(run.opIndex); advance.set(run.opIndex, run.advance); result.textRemoved++; }
     for (const im of info.images) if (rects.some((r) => rectsOverlap(r, im.box))) { drop.add(im.opIndex); result.imagesRemoved++; }
-    const kept: Op[] = ops.map((o, k) => (drop.has(k) ? (o.op === 'Do' || o.op === 'INLINE_IMAGE' ? { op: 'n', args: [] } : { op: 'Tj', args: [new PdfString(new Uint8Array(0))] }) : o));
-    // Black boxes on top.
-    kept.push({ op: 'q', args: [] });
+    // A removed text operator is replaced by one that moves the text position by the same amount
+    // without drawing, so the text after it on the line stays where it was (and does not slide under
+    // or out of the box); ' and " keep their move to the next line.
+    const kept: Op[] = ops.flatMap((o, k): Op[] => {
+      if (!drop.has(k)) return [o];
+      if (o.op === 'Do' || o.op === 'INLINE_IMAGE') return [{ op: 'n', args: [] }];
+      const move: Op = advance.has(k) ? { op: 'TJ', args: [[advance.get(k) || 0]] } : { op: 'Tj', args: [new PdfString(new Uint8Array(0))] };
+      if (o.op === "'") return [{ op: 'T*', args: [] }, move];
+      if (o.op === '"') return [{ op: 'Tw', args: [o.args[0] ?? 0] }, { op: 'Tc', args: [o.args[1] ?? 0] }, { op: 'T*', args: [] }, move];
+      return [move];
+    });
+    // Black boxes on top, in default page space: the original content is wrapped in q…Q so a transform
+    // or clip it leaves in effect at its end cannot move or hide the boxes.
+    kept.unshift({ op: 'q', args: [] });
+    kept.push({ op: 'Q', args: [] }, { op: 'q', args: [] });
     for (const r of rects) { kept.push({ op: 'rg', args: [0, 0, 0] }, { op: 're', args: [r[0], r[1], r[2] - r[0], r[3] - r[1]] }, { op: 'f', args: [] }); }
     kept.push({ op: 'Q', args: [] });
     doc.setPageContent(p, serializeContent(kept));
@@ -390,6 +403,8 @@ export function applyRedactions(doc: PdfDocument, indexes: number[], extra: Map<
     for (const a of pageAnnotations(doc, p)) if (a.ref && (a.subtype === 'Redact' || rects.some((r) => rectsOverlap(r, a.rect)))) removeAnnotation(doc, p, a.ref);
     // Images fully covered: blank the XObject's pixels is not possible without decoding; a removed Do suffices because the operator is gone.
   }
+  // The removed content must not survive in the original part of the file.
+  if (result.areas) doc.mustRewrite = true;
   return result;
 }
 

@@ -39,7 +39,13 @@ export function parseXref(buf: Uint8Array, resolveLength: (o: PdfObj) => PdfObj 
     result.sections.push(off);
     const section = parseSection(buf, off, resolveLength);
     if (!section) { result.warnings.push(`No xref section at ${off}`); if (first) throw new Error('startxref points at nothing'); continue; }
-    if (first) result.usesXrefStream = section.stream;
+    if (first) {
+      result.usesXrefStream = section.stream;
+      // An update's /Prev must name where the table really is, or readers following it find nothing.
+      // (The table itself is intact, so this is not counted as damage: updates stay valid with the corrected offset.)
+      if (section.at !== undefined) result.startxref = section.at;
+    }
+    if (section.short) result.warnings.push(`The cross-reference table at ${off} lists fewer entries than it declares.`);
     first = false;
     for (const [n, e] of section.entries) if (!result.entries.has(n)) result.entries.set(n, e);
     for (const [k, v] of section.trailer.map) if (!result.trailer.has(k)) result.trailer.set(k, v);
@@ -53,7 +59,9 @@ export function parseXref(buf: Uint8Array, resolveLength: (o: PdfObj) => PdfObj 
   return result;
 }
 
-function parseSection(buf: Uint8Array, off: number, resolveLength: (o: PdfObj) => PdfObj): { entries: Map<number, XrefEntry>; trailer: Dict; stream: boolean } | null {
+type Section = { entries: Map<number, XrefEntry>; trailer: Dict; stream: boolean; /** A table subsection listed fewer entries than its header declared. */ short?: boolean; /** Where the section really starts, when the offset that led to it was a little off. */ at?: number };
+
+function parseSection(buf: Uint8Array, off: number, resolveLength: (o: PdfObj) => PdfObj): Section | null {
   const lex = new Lexer(buf, off);
   lex.skipWs();
   if (Lexer.find(buf, 'xref', lex.pos, lex.pos + 4) === lex.pos) return parseTable(buf, lex.pos + 4);
@@ -63,32 +71,33 @@ function parseSection(buf: Uint8Array, off: number, resolveLength: (o: PdfObj) =
   if (ind && ind.obj instanceof PdfStream && isName(ind.obj.dict.get('Type'), 'XRef')) return parseXrefStream(ind.obj, resolveLength);
   // Some writers point a few bytes before/after "xref".
   const near = Lexer.find(buf, 'xref', Math.max(0, off - 64), off + 128);
-  if (near >= 0 && near !== off) return parseTable(buf, near + 4);
+  if (near >= 0 && near !== off && !(near >= 5 && Lexer.find(buf, 'startxref', near - 5, near + 4) === near - 5)) return { ...parseTable(buf, near + 4), at: near };
   return null;
 }
 
-function parseTable(buf: Uint8Array, pos: number): { entries: Map<number, XrefEntry>; trailer: Dict; stream: boolean } {
+function parseTable(buf: Uint8Array, pos: number): Section {
   const entries = new Map<number, XrefEntry>();
+  let short = false;
   const lex = new Lexer(buf, pos);
   for (;;) {
     lex.skipWs();
     if (Lexer.find(buf, 'trailer', lex.pos, lex.pos + 7) === lex.pos) {
       const p = new Parser(buf, lex.pos + 7);
       const t = p.parse();
-      return { entries, trailer: t instanceof Dict ? t : new Dict(), stream: false };
+      return { entries, trailer: t instanceof Dict ? t : new Dict(), stream: false, short };
     }
     const a = lex.next();
     const b = lex.next();
-    if (a.t !== 'num' || b.t !== 'num') return { entries, trailer: new Dict(), stream: false };
+    if (a.t !== 'num' || b.t !== 'num') return { entries, trailer: new Dict(), stream: false, short: true };
     const start = a.v, count = b.v;
     lex.skipWs();
     // Entries are 20 bytes each in a valid file, but tolerate sloppy spacing by tokenizing.
     for (let i = 0; i < count; i++) {
       lex.skipWs();
       const save = lex.pos;
-      if (Lexer.find(buf, 'trailer', lex.pos, lex.pos + 7) === lex.pos) break;
+      if (Lexer.find(buf, 'trailer', lex.pos, lex.pos + 7) === lex.pos) { short = true; break; }
       const o = lex.next(), g = lex.next(), k = lex.next();
-      if (o.t !== 'num' || g.t !== 'num' || k.t !== 'kw') { lex.pos = save; break; }
+      if (o.t !== 'num' || g.t !== 'num' || k.t !== 'kw') { lex.pos = save; short = true; break; }
       const n = start + i;
       if (k.v === 'n' && !entries.has(n)) entries.set(n, { offset: o.v, gen: g.v, type: 1 });
       // Free entries ('f') are not recorded: a later section may define the object.
@@ -96,7 +105,7 @@ function parseTable(buf: Uint8Array, pos: number): { entries: Map<number, XrefEn
   }
 }
 
-function parseXrefStream(s: PdfStream, resolveLength: (o: PdfObj) => PdfObj): { entries: Map<number, XrefEntry>; trailer: Dict; stream: boolean } {
+function parseXrefStream(s: PdfStream, resolveLength: (o: PdfObj) => PdfObj): Section {
   const d = s.dict;
   const data = decodeStream(s.raw, d, (o) => resolveLength(o ?? null)).data;
   const W = (d.get('W') as PdfObj[] | undefined)?.map((x) => num(x)) || [1, 1, 1];

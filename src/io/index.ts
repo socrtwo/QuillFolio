@@ -79,12 +79,14 @@ export async function openAsPdf(data: Uint8Array, name: string, opts: { password
   const format = sniffFormat(data, name) || 'pdf';
   const warnings: string[] = [];
   if (format === 'pdf') {
+    let loaded: PdfDocument | null = null;
     if (!opts.repair) {
       try {
         const doc = PdfDocument.load(data, { password: opts.password });
         warnings.push(...doc.report.warnings);
         if (!doc.report.reconstructed && doc.pageCount > 0) return { doc, format, warnings, bytes: data };
         // Damaged: run the full pipeline and keep whichever is better.
+        if (doc.pageCount > 0) loaded = doc;
       } catch (e) {
         if (e instanceof PasswordNeeded) throw e;
         warnings.push(String((e as any)?.message || e));
@@ -92,6 +94,8 @@ export async function openAsPdf(data: Uint8Array, name: string, opts: { password
     }
     const { repairPdf } = await import('../pdf/repair');
     const report = repairPdf(data, name, { password: opts.password });
+    // The repair pipeline salvages what it can, but the scan-based load may already have more pages.
+    if (loaded && (!report.doc || report.doc.pageCount < loaded.pageCount)) return { doc: loaded, format, warnings, bytes: data };
     if (!report.doc || !report.bytes) throw new Error(report.summary);
     return { doc: report.doc, format, warnings, repair: report, bytes: report.bytes };
   }

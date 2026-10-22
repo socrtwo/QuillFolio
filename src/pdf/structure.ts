@@ -222,7 +222,7 @@ export function readAttachments(doc: PdfDocument): Attachment[] {
     const stream = s instanceof PdfStream ? s : null;
     const params = stream ? doc.getDict(stream, 'Params') : null;
     const name = doc.getText(fs, 'UF') || doc.getText(fs, 'F') || key || 'attachment';
-    return { name, description: doc.getText(fs, 'Desc'), size: params ? doc.getNum(params, 'Size', stream ? stream.raw.length : 0) : stream ? stream.raw.length : 0, mime: stream ? doc.getName(stream, 'Subtype').replace('#2F', '/') : '', modified: params ? parsePdfDate(doc.getText(params, 'ModDate')) : null, fileSpec: fs, stream, where, annot, key };
+    return { name, description: doc.getText(fs, 'Desc'), size: params ? doc.getNum(params, 'Size', stream ? stream.raw.length : 0) : stream ? stream.raw.length : 0, mime: stream ? doc.getName(stream, 'Subtype').replace(/#2F/gi, '/') : '', modified: params ? parsePdfDate(doc.getText(params, 'ModDate')) : null, fileSpec: fs, stream, where, annot, key };
   };
   const names = doc.getDict(doc.catalog, 'Names');
   for (const [k, v] of nameTreeEntries(doc, names ? doc.getDict(names, 'EmbeddedFiles') : null)) {
@@ -239,7 +239,8 @@ export function readAttachments(doc: PdfDocument): Attachment[] {
 }
 
 export function addAttachment(doc: PdfDocument, name: string, data: Uint8Array, opts: { description?: string; mime?: string } = {}): void {
-  const stream = flateStream(data, { Type: Name.get('EmbeddedFile'), Subtype: Name.get((opts.mime || 'application/octet-stream').replace('/', '#2F')), Params: new Dict({ Size: data.length, ModDate: pdfDate() }) });
+  // The writer escapes the '/' of the MIME type as #2F.
+  const stream = flateStream(data, { Type: Name.get('EmbeddedFile'), Subtype: Name.get(opts.mime || 'application/octet-stream'), Params: new Dict({ Size: data.length, ModDate: pdfDate() }) });
   const sref = doc.register(stream);
   const fs = new Dict({ Type: Name.get('Filespec'), F: PdfString.fromText(name), UF: PdfString.fromText(name, true), EF: new Dict({ F: sref, UF: sref }) });
   if (opts.description) fs.set('Desc', PdfString.fromText(opts.description));
@@ -393,6 +394,8 @@ export interface FieldInfo {
   defaultAppearance: string; tooltip: string;
 }
 
+const INHERITABLE_FIELD_KEYS = ['FT', 'Ff', 'V', 'DV', 'DA', 'Q', 'Opt', 'MaxLen'];
+
 export function readFields(doc: PdfDocument): FieldInfo[] {
   const af = doc.getDict(doc.catalog, 'AcroForm');
   const out: FieldInfo[] = [];
@@ -404,7 +407,10 @@ export function readFields(doc: PdfDocument): FieldInfo[] {
     seen.add(ref.num);
     const d = doc.resolve<Dict | null>(ref);
     if (!(d instanceof Dict)) return;
-    const inh = (k: string): PdfObj => (d.has(k) ? doc.get(d, k) : inherited ? doc.get(inherited, k) : null);
+    // FT, Ff, V, DV, DA, Q, Opt and MaxLen may sit on any ancestor (ISO 32000-1 §12.7.3.1): carry them down.
+    const merged = inherited ? inherited.clone() : new Dict();
+    for (const k of INHERITABLE_FIELD_KEYS) if (d.has(k)) merged.set(k, d.get(k)!);
+    const inh = (k: string): PdfObj => doc.get(merged, k) ?? null;
     const partial = doc.getText(d, 'T');
     const name = partial ? (prefix ? `${prefix}.${partial}` : partial) : prefix;
     const kids = doc.getArray(d, 'Kids') || [];
@@ -435,7 +441,7 @@ export function readFields(doc: PdfDocument): FieldInfo[] {
       out.push({ ref, dict: d, name, type, value, options, flags, required: !!(flags & 2), readOnly: !!(flags & 1), multiline: !!(flags & (1 << 12)), password: !!(flags & (1 << 13)), maxLen: typeof inh('MaxLen') === 'number' ? (inh('MaxLen') as number) : 0, widgets, defaultAppearance: da instanceof PdfString ? da.toLatin1() : af ? doc.getText(af, 'DA') : '', tooltip: doc.getText(d, 'TU') });
       return;
     }
-    for (const k of kids) walk(k, d, name, depth + 1);
+    for (const k of kids) walk(k, merged, name, depth + 1);
   };
   for (const f of af ? doc.getArray(af, 'Fields') || [] : []) walk(f, null, '', 0);
   // Widgets not in /Fields (orphans): list them from the pages so they can be filled anyway.

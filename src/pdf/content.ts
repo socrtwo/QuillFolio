@@ -6,7 +6,7 @@
  */
 import { Dict, Name, PdfObj, PdfStream, PdfString, isName, latin1 } from './objects';
 import { Lexer, Parser } from './lexer';
-import { serialize } from './writer';
+import { serialize, serializeName } from './writer';
 import type { PdfDocument } from './document';
 import { bytesOf, concat } from './objects';
 
@@ -64,7 +64,7 @@ export function serializeContent(ops: Op[]): Uint8Array {
   for (const o of ops) {
     if (o.inline) {
       parts.push(bytesOf('BI '));
-      for (const [k, v] of o.inline.dict.map) { parts.push(bytesOf(`/${k} `)); parts.push(serialize(v)); parts.push(bytesOf(' ')); }
+      for (const [k, v] of o.inline.dict.map) { parts.push(bytesOf(serializeName(k) + ' ')); parts.push(serialize(v)); parts.push(bytesOf(' ')); }
       parts.push(bytesOf('ID '));
       parts.push(o.inline.data);
       parts.push(bytesOf('\nEI\n'));
@@ -92,6 +92,8 @@ export interface TextRun {
   size: number;
   /** The string operands' raw bytes, in order. */
   strings: PdfString[];
+  /** The operator's whole horizontal move as one TJ adjustment (thousandths of an em, kerning included, negative for a move to the right): `[advance] TJ` moves the text position exactly as the operator did without drawing anything. */
+  advance: number;
 }
 
 export interface ImageUse { opIndex: number; name: string; box: [number, number, number, number]; inline?: boolean }
@@ -99,9 +101,11 @@ export interface ImageUse { opIndex: number; name: string; box: [number, number,
 export interface FontInfo {
   name: string;
   subtype: string;
-  /** Glyph widths (per code) in text space units ×1000, for simple fonts. */
+  /** Glyph widths (per code) in glyph space units (×1000 of text space, except Type 3: see widthScale). */
   widths: Map<number, number>;
   defaultWidth: number;
+  /** Glyph space → text space for widths: 0.001, or FontMatrix[0] for Type 3 fonts. */
+  widthScale: number;
   /** Code → Unicode (from ToUnicode, or the base encoding). */
   toUnicode: Map<number, string>;
   /** Two-byte codes (Type0 with Identity or a 2-byte CMap). */
@@ -158,8 +162,14 @@ export function parseToUnicode(data: Uint8Array): Map<number, string> {
 
 /** Reads what the engine needs about a font resource. */
 export function fontInfo(doc: PdfDocument, name: string, fd: Dict | null): FontInfo {
-  const info: FontInfo = { name, subtype: fd ? doc.getName(fd, 'Subtype') : '', widths: new Map(), defaultWidth: 500, toUnicode: new Map(), twoByte: false, editable: false, fromUnicode: new Map(), dict: fd || new Dict() };
+  const info: FontInfo = { name, subtype: fd ? doc.getName(fd, 'Subtype') : '', widths: new Map(), defaultWidth: 500, widthScale: 0.001, toUnicode: new Map(), twoByte: false, editable: false, fromUnicode: new Map(), dict: fd || new Dict() };
   if (!fd) return info;
+  if (info.subtype === 'Type3') {
+    // Type 3 widths are in the font's own glyph space, mapped to text space by its FontMatrix.
+    const fm = doc.getArray(fd, 'FontMatrix');
+    const a = fm && fm.length >= 1 ? doc.resolve<PdfObj>(fm[0]) : null;
+    if (typeof a === 'number' && isFinite(a) && a !== 0) info.widthScale = Math.abs(a);
+  }
   const base = doc.getName(fd, 'BaseFont');
   const tu = doc.get(fd, 'ToUnicode');
   if (tu instanceof PdfStream) { try { info.toUnicode = parseToUnicode(doc.decoded(tu)); } catch { /* */ } }
@@ -275,6 +285,7 @@ export function analyzeContent(doc: PdfDocument, ops: Op[], resources: Dict | nu
     if (!font) font = fontOf('__none');
     const strings: PdfString[] = [];
     let text = '';
+    let advance = 0;
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     const trm = () => mul(mul([size * hscale, 0, 0, size, 0, rise], tm), ctm);
     const addBox = (w: number) => {
@@ -283,25 +294,26 @@ export function analyzeContent(doc: PdfDocument, ops: Op[], resources: Dict | nu
       for (const [x, y] of pts) { x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
     };
     for (const it of items) {
-      if (typeof it === 'number') { tm = mul([1, 0, 0, 1, (-it / 1000) * size * hscale, 0], tm); continue; }
+      if (typeof it === 'number') { tm = mul([1, 0, 0, 1, (-it / 1000) * size * hscale, 0], tm); advance += it; continue; }
       if (!(it instanceof PdfString)) continue;
       strings.push(it);
       const { codes, text: t } = decodeString(font, it);
       text += t;
       let adv = 0;
       for (const c of codes) {
-        const w = (font.widths.get(c) ?? font.defaultWidth) / 1000;
+        const w = (font.widths.get(c) ?? font.defaultWidth) * font.widthScale;
         const isSpace = !font.twoByte && c === 32;
         adv += w * size + charSp + (isSpace ? wordSp : 0);
       }
       const total = adv * hscale;
-      addBox(total / (size * hscale || 1) * (size * hscale ? 1 : 0) || 0);
-      // Advance in unscaled text space units: width / (size*hscale) → box above used glyph units; simpler: box from 0..total/size
+      // The box spans the string's advance in text space (addBox applies size and scaling itself).
+      addBox(size * hscale ? total / (size * hscale) : 0);
+      if (size * hscale) advance -= (total / (size * hscale)) * 1000;
       tm = mul([1, 0, 0, 1, total, 0], tm);
     }
     if (strings.length) {
       if (!isFinite(x0)) { const [x, y] = apply(trm(), 0, 0); x0 = x1 = x; y0 = y1 = y; }
-      runs.push({ opIndex, text, box: [x0, y0, x1, y1], font: font.name, size, strings });
+      runs.push({ opIndex, text, box: [x0, y0, x1, y1], font: font.name, size, strings, advance });
     }
   };
   ops.forEach((o, i) => {

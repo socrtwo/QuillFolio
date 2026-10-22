@@ -29,7 +29,16 @@ export interface SaveOptions {
 const NAME_ESC = /[^\x21-\x7e]|[#()<>\[\]{}\/%]/g;
 
 export function serializeName(n: string): string {
-  return '/' + n.replace(NAME_ESC, (c) => '#' + c.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase());
+  // Names read from files hold one char per byte; names made in the app may hold any Unicode text,
+  // which is written as UTF-8 (the convention ISO 32000-1 §7.3.5 recommends).
+  const bytes = /[^\x00-\xff]/.test(n) ? String.fromCharCode(...new TextEncoder().encode(n)) : n;
+  return '/' + bytes.replace(NAME_ESC, (c) => '#' + c.charCodeAt(0).toString(16).padStart(2, '0').toUpperCase());
+}
+
+/** Display text of a name: its bytes read as UTF-8 when they form valid UTF-8, else as Latin-1. */
+export function nameText(n: string): string {
+  if (!/[\x80-\xff]/.test(n)) return n;
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(Uint8Array.from(n, (c) => c.charCodeAt(0) & 255)); } catch { return n; }
 }
 
 export function serializeString(s: PdfString): string {
@@ -51,7 +60,10 @@ export function serializeString(s: PdfString): string {
 export function fmtNum(n: number): string {
   if (!isFinite(n)) return '0';
   if (Number.isInteger(n)) return String(n);
-  let s = n.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+  // Enough digits that values read from a file survive a round trip (font matrices such as
+  // 0.00048828125 and scale factors such as 1.33333337 change glyph metrics when rounded), without
+  // the float noise of String(n) or exponent notation.
+  let s = n.toFixed(Math.abs(n) >= 1 ? 6 : 10).replace(/0+$/, '').replace(/\.$/, '');
   if (s === '-0') s = '0';
   return s;
 }
@@ -98,8 +110,8 @@ function reachable(doc: PdfDocument, roots: PdfObj[]): Set<number> {
   return seen;
 }
 
-/** Remaps references in an object graph (used by renumbering and by copying between documents). */
-export function remapRefs(o: PdfObj, map: (r: Ref) => Ref): PdfObj {
+/** Remaps references in an object graph (used by renumbering and by copying between documents). A map that returns null drops the reference (written as null). */
+export function remapRefs(o: PdfObj, map: (r: Ref) => Ref | null): PdfObj {
   if (o instanceof Ref) return map(o);
   if (Array.isArray(o)) return o.map((x) => remapRefs(x, map));
   if (o instanceof Dict) { const d = new Dict(); for (const [k, v] of o.map) d.map.set(k, remapRefs(v, map)); return d; }
@@ -135,10 +147,14 @@ export function writeFull(doc: PdfDocument, opts: SaveOptions = {}): Uint8Array 
   // Renumber 1..n in order.
   const map = new Map<number, number>();
   nums.forEach((n, i) => map.set(n, i + 1));
-  const mapRef = (r: Ref): Ref => (map.has(r.num) ? new Ref(map.get(r.num)!, 0) : new Ref(0, 0));
+  // A reference to an object that is not written (missing from the file, or the old /Encrypt dictionary)
+  // becomes null: "0 0 R" would point at the free-list head.
+  const mapRef = (r: Ref): Ref | null => (map.has(r.num) ? new Ref(map.get(r.num)!, 0) : null);
   // Encryption for the new file.
   const ids = doc.resolve(trailer.get('ID'));
-  let id0 = Array.isArray(ids) && ids[0] instanceof PdfString ? ids[0].bytes : md5(concat([randomBytes(16), bytesOf(String(Date.now()))]));
+  const keepSecurity = !!doc.security && !opts.encrypt && !opts.removeSecurity;
+  // The R2–R4 file key depends on the first ID string, so a file kept encrypted keeps it (even an empty one).
+  let id0 = Array.isArray(ids) && ids[0] instanceof PdfString ? ids[0].bytes : keepSecurity ? new Uint8Array(0) : md5(concat([randomBytes(16), bytesOf(String(Date.now()))]));
   const id1 = md5(concat([id0, randomBytes(16), bytesOf(String(Date.now()))]));
   let security: SecurityHandler | null = null;
   let encDict: Dict | null = null;
@@ -146,9 +162,11 @@ export function writeFull(doc: PdfDocument, opts: SaveOptions = {}): Uint8Array 
     id0 = md5(concat([randomBytes(16), bytesOf(String(Date.now()))]));
     const e = SecurityHandler.createAes256(opts.encrypt.userPassword, opts.encrypt.ownerPassword, opts.encrypt.permissions, id0, opts.encrypt.encryptMetadata !== false);
     security = e.handler; encDict = e.dict;
-  } else if (doc.security && !opts.removeSecurity) {
+  } else if (keepSecurity) {
     security = doc.security;
-    encDict = security.dict;
+    // The dictionary is written as one direct object: its parts (often /CF) may be indirect objects
+    // that are not reachable from the catalog and would otherwise be lost or keep stale numbers.
+    encDict = inlineRefs(doc, security!.dict) as Dict;
   }
   const out: Uint8Array[] = [];
   let pos = 0;
@@ -200,7 +218,7 @@ export function writeFull(doc: PdfDocument, opts: SaveOptions = {}): Uint8Array 
   const root = trailer.get('Root');
   newTrailer.set('Root', root instanceof Ref ? mapRef(root) : (root ?? null) as PdfObj);
   const info = trailer.get('Info');
-  if (info instanceof Ref && map.has(info.num)) newTrailer.set('Info', mapRef(info));
+  if (info instanceof Ref && map.has(info.num)) newTrailer.set('Info', mapRef(info)!);
   newTrailer.set('ID', [new PdfString(id0, true), new PdfString(id1, true)]);
   if (encNum) newTrailer.set('Encrypt', new Ref(encNum, 0));
   const xrefPos = pos;
@@ -298,6 +316,18 @@ export function writeIncremental(doc: PdfDocument, opts: SaveOptions = {}): Uint
   }
   push(bytesOf(`startxref\n${xrefPos}\n%%EOF\n`));
   return concat(out);
+}
+
+/** A copy of an object with every indirect reference replaced by the object it points at (cycles become null). */
+function inlineRefs(doc: PdfDocument, o: PdfObj, seen = new Set<number>()): PdfObj {
+  if (o instanceof Ref) {
+    if (seen.has(o.num)) return null;
+    const next = new Set(seen); next.add(o.num);
+    return inlineRefs(doc, doc.fetch(o), next);
+  }
+  if (Array.isArray(o)) return o.map((x) => inlineRefs(doc, x, seen));
+  if (o instanceof Dict) { const d = new Dict(); for (const [k, v] of o.map) d.map.set(k, inlineRefs(doc, v, seen)); return d; }
+  return o;
 }
 
 function versionOf(doc: PdfDocument): string {

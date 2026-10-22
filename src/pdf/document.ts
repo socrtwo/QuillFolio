@@ -18,6 +18,8 @@ export interface PageInfo {
   cropBox: [number, number, number, number];
   rotate: number;
   resources: Dict | null;
+  /** Inheritable attributes as written on the page or the nearest ancestor (references kept), for making them explicit. */
+  inherited: { mediaBox?: PdfObj; cropBox?: PdfObj; rotate?: PdfObj; resources?: PdfObj };
   /** Width and height in points after rotation. */
   width: number;
   height: number;
@@ -25,7 +27,7 @@ export interface PageInfo {
 
 export interface LoadOptions { password?: string; /** Skip the normal xref and rebuild from a scan. */ repair?: boolean; onWarning?: (w: string) => void }
 
-export interface LoadReport { reconstructed: boolean; warnings: string[]; header: string; encrypted: boolean; pagesSynthesized: boolean }
+export interface LoadReport { reconstructed: boolean; warnings: string[]; header: string; encrypted: boolean; pagesSynthesized: boolean; /** The cross-reference data needed fixing (sections missing or miscounted): saving rewrites the file instead of appending to it. */ xrefDamaged?: boolean }
 
 const RECT_DEFAULT: [number, number, number, number] = [0, 0, 612, 792];
 
@@ -48,6 +50,14 @@ export class PdfDocument {
   private reconstructed = false;
   /** Set when the file was modified in memory (save() clears it). */
   dirty = false;
+  /**
+   * Set by edits that must not leave the old bytes in the file (applied redactions, sanitizing): an
+   * incremental update would append the change and keep the removed text, images or metadata
+   * recoverable in the original part of the file, so save() then rewrites the whole file.
+   */
+  mustRewrite = false;
+  /** True when the next save() will rewrite the whole file whatever it is asked (see mustRewrite and LoadReport.xrefDamaged). */
+  get rewritesOnSave(): boolean { return this.mustRewrite || !!this.report.xrefDamaged || this.reconstructed; }
   password = '';
 
   private constructor(buf: Uint8Array) { this.buf = buf; }
@@ -69,7 +79,7 @@ export class PdfDocument {
       try { xr = parseXref(buf, (o) => doc.resolve(o)); for (const w of xr.warnings) warn(w); }
       catch (e: any) { warn(`Cross-reference table unusable: ${e?.message || e}`); }
     }
-    if (xr) { doc.xref = xr.entries; doc.trailer = xr.trailer; doc.usesXrefStream = xr.usesXrefStream; doc.startxref = xr.startxref; }
+    if (xr) { doc.xref = xr.entries; doc.trailer = xr.trailer; doc.usesXrefStream = xr.usesXrefStream; doc.startxref = xr.startxref; if (xr.warnings.length) doc.report.xrefDamaged = true; }
     if (!xr || !doc.validate()) {
       doc.reconstruct(warn);
     }
@@ -78,13 +88,28 @@ export class PdfDocument {
     try {
       const cat = doc.catalog;
       if (!cat || (!cat.has('Pages') && !cat.has('Type'))) throw new Error('no catalog');
-      doc.pages; // forces the walk
+      // A page tree that yields nothing usually means part of the cross-reference data is missing
+      // (e.g. a linearized file whose main table was lost): scanning the file finds the rest.
+      if (!doc.pages.length) throw new Error('no pages');
     } catch {
       if (!doc.reconstructed) { doc.reconstruct(warn); doc.setupSecurity(opts.password || ''); }
     }
     doc.pageCache = null;
+    // A rebuilt file whose page tree is missing (no catalog survived, or its root Pages object was
+    // overwritten): gather the page objects that are left, in file order.
+    if (doc.reconstructed) {
+      try {
+        const cat = doc.catalog;
+        if (!doc.pages.length) {
+          const pagesRef = doc.collectPages(warn);
+          if ((doc.resolve<Dict>(pagesRef).get('Kids') as PdfObj[]).length || !cat.has('Pages')) { cat.set('Pages', pagesRef); doc.update(doc.catalogRef, cat); }
+        }
+      } catch { /* nothing usable */ }
+      doc.pageCache = null;
+    }
     const size = doc.trailer.get('Size');
-    doc.nextNum = Math.max(typeof size === 'number' ? size : 0, ...[...doc.xref.keys()].map((n) => n + 1), 1);
+    // Objects created while loading (a rebuilt catalog or page tree) already hold numbers: new ones go after them.
+    doc.nextNum = Math.max(doc.nextNum, typeof size === 'number' ? size : 0, ...[...doc.xref.keys(), ...doc.changed.keys()].map((n) => n + 1), 1);
     doc.password = opts.password || '';
     return doc;
   }
@@ -134,26 +159,33 @@ export class PdfDocument {
     this.trailer = r.trailer;
     // Keep ID/Info/Encrypt from the original trailer if the scan did not find them.
     for (const k of ['ID', 'Info', 'Encrypt']) if (!this.trailer.has(k) && oldTrailer.has(k)) this.trailer.set(k, oldTrailer.get(k)!);
+    // Number new objects after every object found, before anything is created below.
+    const found = this.trailer.get('Size');
+    this.nextNum = Math.max(this.nextNum, typeof found === 'number' ? found : 0, ...[...this.xref.keys()].map((n) => n + 1));
     if (r.catalogSynthesized) {
       const pagesRoot: number | undefined = (r.trailer as any).__pagesRoot;
       let pagesRef: Ref;
-      if (pagesRoot != null && this.xref.has(pagesRoot)) pagesRef = new Ref(pagesRoot, this.xref.get(pagesRoot)!.gen);
-      else {
-        // Collect every /Type /Page object in file order into a new Pages node.
-        const kids: Ref[] = [];
-        const ordered = [...this.xref.entries()].sort((a, b) => (a[1].type === 2 ? a[1].offset * 1e6 + (a[1].idx || 0) : a[1].offset) - (b[1].type === 2 ? b[1].offset * 1e6 + (b[1].idx || 0) : b[1].offset));
-        for (const [n, e] of ordered) {
-          try { const o = this.fetch(new Ref(n, e.gen)); if (o instanceof Dict && isName(o.get('Type'), 'Page')) kids.push(new Ref(n, e.gen)); } catch { /* */ }
-        }
-        pagesRef = this.register(new Dict({ Type: Name.get('Pages'), Kids: kids, Count: kids.length }));
-        for (const k of kids) { const d = this.fetch(k); if (d instanceof Dict) { d.set('Parent', pagesRef); this.update(k, d); } }
-        this.report.pagesSynthesized = true;
-        warn(`${kids.length} page object(s) were collected by scanning the file.`);
-      }
-      this.trailer.set('Root', this.register(new Dict({ Type: Name.get('Catalog'), Pages: pagesRef })));
+      // The page objects are collected by load() once decryption is set up (their strings may be encrypted).
+      const cat = new Dict({ Type: Name.get('Catalog') });
+      if (pagesRoot != null && this.xref.has(pagesRoot)) cat.set('Pages', new Ref(pagesRoot, this.xref.get(pagesRoot)!.gen));
+      this.trailer.set('Root', this.register(cat));
     }
     const size = this.trailer.get('Size');
     this.nextNum = Math.max(this.nextNum, typeof size === 'number' ? size : 0, ...[...this.xref.keys()].map((n) => n + 1));
+  }
+
+  /** Collects every /Type /Page object in file order into a new Pages node; returns its reference. */
+  private collectPages(warn: (w: string) => void): Ref {
+    const kids: Ref[] = [];
+    const ordered = [...this.xref.entries()].sort((a, b) => (a[1].type === 2 ? a[1].offset * 1e6 + (a[1].idx || 0) : a[1].offset) - (b[1].type === 2 ? b[1].offset * 1e6 + (b[1].idx || 0) : b[1].offset));
+    for (const [n, e] of ordered) {
+      try { const o = this.fetch(new Ref(n, e.gen)); if (o instanceof Dict && isName(o.get('Type'), 'Page')) kids.push(new Ref(n, e.gen)); } catch { /* */ }
+    }
+    const pagesRef = this.register(new Dict({ Type: Name.get('Pages'), Kids: kids, Count: kids.length }));
+    for (const k of kids) { const d = this.fetch(k); if (d instanceof Dict) { d.set('Parent', pagesRef); this.update(k, d); } }
+    this.report.pagesSynthesized = true;
+    warn(`${kids.length} page object(s) were collected by scanning the file.`);
+    return pagesRef;
   }
 
   private setupSecurity(password: string): void {
@@ -166,8 +198,15 @@ export class PdfDocument {
     const id0 = Array.isArray(ids) && ids[0] instanceof PdfString ? ids[0].bytes : new Uint8Array(0);
     const sh = new SecurityHandler(encDict, id0, (o) => this.resolveRaw(o));
     if (!sh.authenticate(password, (o) => this.resolveRaw(o))) {
-      if (!password) throw new PasswordNeeded();
-      throw new PasswordNeeded('The password is incorrect.');
+      // Only the attachments are encrypted (AuthEvent EFOpen: streams and strings use the Identity
+      // filter): the document opens without the password; its attachments stay locked.
+      if (!password && sh.method === 'none' && sh.stringMethod === 'none') {
+        sh.keyKnown = false;
+        this.report.warnings.push('Only the attachments of this PDF are encrypted; they need the password to be opened.');
+      } else {
+        if (!password) throw new PasswordNeeded();
+        throw new PasswordNeeded('The password is incorrect.');
+      }
     }
     this.security = sh;
     this.encryptRef = enc instanceof Ref ? enc : null;
@@ -328,10 +367,16 @@ export class PdfDocument {
         let rot = this.resolve<PdfObj>(inherit.rotate);
         rot = typeof rot === 'number' ? ((Math.round(rot / 90) * 90) % 360 + 360) % 360 : 0;
         const w = cropOk[2] - cropOk[0], h = cropOk[3] - cropOk[1];
-        out.push({ index: out.length, ref, dict: node, mediaBox: mb, cropBox: cropOk, rotate: rot, resources: dictOf(this.resolve(inherit.resources)), width: rot % 180 ? h : w, height: rot % 180 ? w : h });
+        out.push({ index: out.length, ref, dict: node, mediaBox: mb, cropBox: cropOk, rotate: rot, resources: dictOf(this.resolve(inherit.resources)), inherited: inherit, width: rot % 180 ? h : w, height: rot % 180 ? w : h });
         return;
       }
-      if (!kids) return;
+      if (!kids) {
+        // Damaged trees sometimes hold one kid without the array brackets.
+        const one = node.get('Kids');
+        const kd = one instanceof Ref ? dictOf(this.resolve(one)) : null;
+        if (kd && one instanceof Ref && !seen.has(one.key)) { seen.add(one.key); walk(kd, one, inherit, depth + 1); }
+        return;
+      }
       for (const k of kids) {
         const kref = k instanceof Ref ? k : null;
         if (kref) { if (seen.has(kref.key)) continue; seen.add(kref.key); }
@@ -376,14 +421,14 @@ export class PdfDocument {
 
   /** Resources dictionary of a page, created (and made direct on the page) when missing. */
   pageResources(p: PageInfo): Dict {
+    // Start from the resources the page actually uses, which may be inherited from the page tree:
+    // a fresh empty dictionary would hide every font and image the content refers to.
+    // A copy (with its direct sub-dictionaries copied too) so that what is added affects this page only.
+    const own = (d: Dict): Dict => { const c = d.clone(); for (const [k, v] of c.map) if (v instanceof Dict) c.map.set(k, v.clone()); return c; };
     let res = this.getDict(p.dict, 'Resources');
-    if (!res) { res = new Dict(); p.dict.set('Resources', res); }
-    else if (!(p.dict.get('Resources') instanceof Dict)) {
-      // Inherited or indirect: copy so that changes affect this page only.
-      const own = res.clone();
-      p.dict.set('Resources', own);
-      res = own;
-    }
+    if (!res && p.resources) { res = own(p.resources); p.dict.set('Resources', res); }
+    else if (!res) { res = new Dict(); p.dict.set('Resources', res); }
+    else if (!(p.dict.get('Resources') instanceof Dict)) { res = own(res); p.dict.set('Resources', res); }
     if (p.ref) this.touch(p.ref);
     return res;
   }
@@ -393,7 +438,9 @@ export class PdfDocument {
 
   /** Writes the document. Incremental updates append to the original bytes; a full rewrite renumbers and drops unused objects. */
   save(opts: SaveOptions = {}): Uint8Array {
-    const incremental = opts.incremental ?? (!!this.buf.length && !this.reconstructed && !opts.encrypt && opts.removeSecurity !== true);
+    // An update appended to a file whose cross-reference data is broken would chain onto that damage
+    // (readers then report errors or fall back to scanning), so such files are always rewritten.
+    const incremental = this.mustRewrite || this.report.xrefDamaged || this.reconstructed ? false : opts.incremental ?? (!!this.buf.length && !opts.encrypt && opts.removeSecurity !== true);
     this.ensureInfo().set('ModDate', pdfDate());
     const bytes = incremental ? writeIncremental(this, opts) : writeFull(this, opts);
     return bytes;

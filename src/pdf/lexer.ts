@@ -95,9 +95,11 @@ export class Lexer {
       }
       out.push(c);
     }
+    // Names are byte strings (ISO 32000-1 §7.3.5): keep one char per byte so that a name written back
+    // has the same bytes, and resource names in content streams keep matching their dictionaries.
     let s = '';
     for (const c of out) s += String.fromCharCode(c);
-    try { return decodeURIComponent(escape(s)); } catch { return s; }
+    return s;
   }
 
   private literalString(): PdfString {

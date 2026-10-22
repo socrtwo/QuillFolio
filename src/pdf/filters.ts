@@ -173,7 +173,9 @@ export function lzwDecode(data: Uint8Array, early = 1): Uint8Array {
     else break;
     out.push(...entry);
     prev = entry;
-    if (dict.length + early - 1 >= (1 << codeLen) && codeLen < 12) codeLen++;
+    // The code width grows when the next code to be assigned no longer fits; with EarlyChange 1
+    // (the default) one code earlier: at 511, 1023 and 2047 instead of 512, 1024 and 2048.
+    if (dict.length + early >= (1 << codeLen) && codeLen < 12) codeLen++;
   }
   return Uint8Array.from(out);
 }

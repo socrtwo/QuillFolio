@@ -6,25 +6,37 @@ import { Dict, Name, PdfObj, PdfStream, PdfString, Ref, cloneObj } from '../obje
 import { flateStream } from '../filters';
 import { PdfDocument, PageInfo } from '../document';
 import { remapRefs, fmtNum } from '../writer';
-import { addBlankPage, ensureFont, ensureXObject, ensureExtGState, litText, PAPER } from '../build';
+import { addBlankPage, ensureFont, ensureXObject, ensureExtGState, ensurePagesRoot, litText, PAPER } from '../build';
 import { textWidth, type StdFont } from '../stdfonts';
 import { bytesOf, concat } from '../objects';
 
 function kidsOf(doc: PdfDocument, node: Dict): PdfObj[] { return (doc.getArray(node, 'Kids') || []).slice(); }
 
+/**
+ * Copies the inheritable attributes (MediaBox, CropBox, Resources, Rotate) a page takes from its
+ * ancestors onto the page dictionary itself, keeping references as references, so the page keeps its
+ * size, crop and fonts when it leaves its place in the tree.
+ */
+function makeInheritedExplicit(d: Dict, p: PageInfo): void {
+  const inh = p.inherited || {};
+  if (!d.has('MediaBox')) d.set('MediaBox', inh.mediaBox !== undefined ? inh.mediaBox : [...p.mediaBox]);
+  if (!d.has('CropBox') && inh.cropBox !== undefined) d.set('CropBox', inh.cropBox);
+  if (!d.has('Resources') && inh.resources !== undefined) d.set('Resources', inh.resources);
+  if (!d.has('Rotate') && inh.rotate !== undefined) d.set('Rotate', inh.rotate);
+}
+
 /** Flattens the page tree: every page becomes a direct kid of the root (simplest correct structure for edits). */
 export function flattenPageTree(doc: PdfDocument): void {
+  ensurePagesRoot(doc);
   const rootRef = doc.pagesRootRef;
   const root = doc.pagesRoot;
   if (!root || !rootRef) return;
   const pages = doc.pages;
   const kids = pages.map((p) => p.ref).filter((r): r is Ref => !!r);
   if (kids.length !== pages.length) return;
-  for (const p of pages) { if (p.dict.get('Parent') instanceof Ref && (p.dict.get('Parent') as Ref).num !== rootRef.num) { p.dict.set('Parent', rootRef); } else p.dict.set('Parent', rootRef);
-    // Make inherited attributes explicit so flattening loses nothing.
-    if (!p.dict.has('MediaBox')) p.dict.set('MediaBox', [...p.mediaBox]);
-    if (!p.dict.has('Resources') && p.resources) p.dict.set('Resources', p.resources);
-    if (!p.dict.has('Rotate') && p.rotate) p.dict.set('Rotate', p.rotate);
+  for (const p of pages) {
+    p.dict.set('Parent', rootRef);
+    makeInheritedExplicit(p.dict, p);
     if (p.ref) doc.touch(p.ref);
   }
   root.set('Kids', kids);
@@ -93,6 +105,8 @@ export function duplicatePages(doc: PdfDocument, indexes: number[]): void {
 }
 
 export function insertBlankPages(doc: PdfDocument, at: number, count: number, size: [number, number]): void {
+  // addBlankPage inserts into the root's Kids, so the position is a page index only in a flat tree.
+  flattenPageTree(doc);
   for (let i = 0; i < count; i++) addBlankPage(doc, size, at + i);
 }
 
@@ -148,22 +162,39 @@ export function scalePages(doc: PdfDocument, indexes: number[], target: { factor
 // ------------------------------------------------------------------------------------------
 // Copying pages between documents
 
-/** Copies an object graph from `src` into `dst`, remapping references (streams keep their raw bytes). */
-export function copyGraph(src: PdfDocument, dst: PdfDocument, obj: PdfObj, map = new Map<number, Ref>(), skipKeys = new Set<string>()): PdfObj {
+/**
+ * Copies an object graph from `src` into `dst`, remapping references (streams keep their raw bytes).
+ * References to objects in `drop` are not followed: they are left out of Kids/Annots/Fields arrays and
+ * become null elsewhere (used to keep pages that are not being copied out of the copy).
+ */
+export function copyGraph(src: PdfDocument, dst: PdfDocument, obj: PdfObj, map = new Map<number, Ref>(), skipKeys = new Set<string>(), drop: Set<number> = new Set()): PdfObj {
   const mapRef = (r: Ref): Ref => {
     const got = map.get(r.num);
     if (got) return got;
     const placeholder = dst.register(null);
     map.set(r.num, placeholder);
     const o = src.fetch(r);
-    const copied = copyGraph(src, dst, o, map, skipKeys);
+    const copied = copyGraph(src, dst, o, map, skipKeys, drop);
     dst.update(placeholder, copied);
     return placeholder;
   };
-  const walk = (o: PdfObj): PdfObj => {
-    if (o instanceof Ref) return mapRef(o);
-    if (Array.isArray(o)) return o.map(walk);
-    if (o instanceof Dict) { const d = new Dict(); for (const [k, v] of o.map) { if (skipKeys.has(k)) continue; d.map.set(k, walk(v)); } return d; }
+  const LIST_KEYS = new Set(['Kids', 'Annots', 'Fields']);
+  const walk = (o: PdfObj, key = ''): PdfObj => {
+    if (o instanceof Ref) return drop.has(o.num) && !map.has(o.num) ? null : mapRef(o);
+    if (Array.isArray(o)) {
+      const list = LIST_KEYS.has(key) ? o.filter((x) => !(x instanceof Ref && drop.has(x.num) && !map.has(x.num))) : o;
+      return list.map((x) => walk(x));
+    }
+    if (o instanceof Dict) {
+      const d = new Dict();
+      for (const [k, v] of o.map) {
+        if (skipKeys.has(k)) continue;
+        // A destination on a page that is not copied is removed rather than left pointing nowhere.
+        if ((k === 'Dest' || k === 'D') && Array.isArray(v) && v[0] instanceof Ref && drop.has(v[0].num) && !map.has(v[0].num)) continue;
+        d.map.set(k, walk(v, k));
+      }
+      return d;
+    }
     if (o instanceof PdfStream) {
       // Streams are copied decoded-and-re-encoded only when the source is encrypted (raw bytes were decrypted already).
       const d = walk(o.dict) as Dict;
@@ -177,7 +208,7 @@ export function copyGraph(src: PdfDocument, dst: PdfDocument, obj: PdfObj, map =
   return walk(obj);
 }
 
-const PAGE_SKIP = new Set(['Parent', 'StructParents', 'B', 'PieceInfo']);
+const PAGE_SKIP = new Set(['Parent', 'StructParents', 'B', 'PieceInfo', 'Annots']);
 
 /** Appends pages of `src` (by index) to `dst` at position `at` (default end). Returns the new PageInfos. */
 export function importPages(src: PdfDocument, dst: PdfDocument, indexes: number[], at?: number, opts: { keepAnnots?: boolean } = {}): PageInfo[] {
@@ -185,29 +216,40 @@ export function importPages(src: PdfDocument, dst: PdfDocument, indexes: number[
   const root = dst.pagesRoot!, rootRef = dst.pagesRootRef!;
   const kids = kidsOf(dst, root);
   const map = new Map<number, Ref>();
-  const skip = new Set(PAGE_SKIP);
-  if (opts.keepAnnots === false) skip.add('Annots');
-  const newRefs: Ref[] = [];
-  for (const i of indexes) {
-    const p = src.pages[i];
-    if (!p) continue;
-    const d = p.dict.clone();
-    // Inherited attributes become explicit.
-    if (!d.has('MediaBox')) d.set('MediaBox', [...p.mediaBox]);
-    if (!d.has('Resources') && p.resources) d.set('Resources', p.resources);
-    if (!d.has('Rotate') && p.rotate) d.set('Rotate', p.rotate);
-    if (!d.has('CropBox') && p.cropBox !== p.mediaBox) d.set('CropBox', [...p.cropBox]);
-    const copied = copyGraph(src, dst, d, map, skip) as Dict;
-    copied.set('Parent', rootRef);
-    copied.delete('Annots');
-    if (opts.keepAnnots !== false && p.dict.has('Annots')) {
-      const annots = (src.getArray(p.dict, 'Annots') || []).map((a) => { const ad = src.resolve<Dict | null>(a); if (!(ad instanceof Dict)) return null; if (src.getName(ad, 'Subtype') === 'Popup') return null; const c = copyGraph(src, dst, ad, map, new Set(['P', 'Parent', 'Popup', 'IRT', 'Dest'])) as Dict; return dst.register(c); }).filter((x): x is Ref => !!x);
-      if (annots.length) { copied.set('Annots', annots); }
-    }
-    const ref = dst.register(copied);
-    for (const a of dst.getArray(copied, 'Annots') || []) { const ad = dst.resolve<Dict>(a); ad.set('P', ref); }
-    newRefs.push(ref);
+  const chosen = indexes.map((i) => src.pages[i]).filter((p): p is PageInfo => !!p);
+  // Each imported page gets its new number first, so links, /P entries and field widgets that point
+  // at it land on the copy (a page imported twice keeps the first copy as the link target).
+  const newRefs: Ref[] = chosen.map((p) => { const r = dst.register(null); if (p.ref && !map.has(p.ref.num)) map.set(p.ref.num, r); return r; });
+  // Pages that are not imported, and their annotations, are never pulled in through links or fields.
+  const drop = new Set<number>();
+  const chosenNums = new Set(chosen.map((p) => p.ref?.num));
+  for (const p of src.pages) {
+    if (chosenNums.has(p.ref?.num)) continue;
+    if (p.ref) drop.add(p.ref.num);
+    for (const a of src.getArray(p.dict, 'Annots') || []) if (a instanceof Ref) drop.add(a.num);
   }
+  const annotSkip = new Set(['Popup', 'StructParent']);
+  chosen.forEach((p, k) => {
+    const d = p.dict.clone();
+    makeInheritedExplicit(d, p);
+    const copied = copyGraph(src, dst, d, map, PAGE_SKIP, drop) as Dict;
+    copied.set('Parent', rootRef);
+    if (opts.keepAnnots !== false && p.dict.has('Annots')) {
+      // Annotations are copied by reference so that form fields (whose /Kids name the widgets) and
+      // the AcroForm merge below find the same copies; popups are rebuilt by viewers.
+      const annots: Ref[] = [];
+      for (const a of src.getArray(p.dict, 'Annots') || []) {
+        const ad = src.resolve<Dict | null>(a);
+        if (!(ad instanceof Dict) || src.getName(ad, 'Subtype') === 'Popup') continue;
+        const c = copyGraph(src, dst, a instanceof Ref ? a : ad, map, annotSkip, drop);
+        if (c instanceof Ref) annots.push(c); else if (c instanceof Dict) annots.push(dst.register(c));
+      }
+      if (annots.length) copied.set('Annots', annots);
+    }
+    const ref = newRefs[k];
+    dst.update(ref, copied);
+    for (const a of dst.getArray(copied, 'Annots') || []) { const ad = dst.resolve<Dict>(a); if (ad instanceof Dict) { ad.set('P', ref); if (a instanceof Ref) dst.update(a, ad); } }
+  });
   const pos = at == null ? kids.length : Math.max(0, Math.min(kids.length, at));
   kids.splice(pos, 0, ...newRefs);
   root.set('Kids', kids); root.set('Count', kids.length);
@@ -222,13 +264,51 @@ export function importPages(src: PdfDocument, dst: PdfDocument, indexes: number[
       for (const f of fields) if (f instanceof Ref && map.has(f.num)) dstFields.push(map.get(f.num)!);
       dstAf.set('Fields', dstFields);
       if (!dstAf.has('DA') && srcAf.has('DA')) dstAf.set('DA', srcAf.get('DA')!);
+      // Fields whose appearances the viewer must build (no usable /AP) stay that way in the copy.
+      if (src.get(srcAf, 'NeedAppearances') === true) dstAf.set('NeedAppearances', true);
       if (!dstAf.has('DR') && srcAf.has('DR')) dstAf.set('DR', copyGraph(src, dst, srcAf.get('DR')!, map));
       const afRef = dst.catalog.get('AcroForm'); if (afRef instanceof Ref) dst.touch(afRef);
     }
   }
+  copyOptionalContent(src, dst, map, drop);
   dst.invalidatePages();
   const pages = dst.pages;
   return newRefs.map((r) => pages.find((p) => p.ref?.num === r.num)!).filter(Boolean);
+}
+
+/**
+ * Optional content (layers) of copied pages keeps its default state: without /OCProperties in the
+ * destination, every layer a page uses would be shown, including the ones the source hides.
+ */
+function copyOptionalContent(src: PdfDocument, dst: PdfDocument, map: Map<number, Ref>, drop: Set<number>): void {
+  const srcOc = src.getDict(src.catalog, 'OCProperties');
+  if (!srcOc) return;
+  const used = (src.getArray(srcOc, 'OCGs') || []).filter((o): o is Ref => o instanceof Ref && map.has(o.num));
+  if (!used.length) return;
+  const mapped = (list: PdfObj[] | null): Ref[] => (list || []).filter((o): o is Ref => o instanceof Ref && map.has(o.num)).map((o) => map.get(o.num)!);
+  const d = src.getDict(srcOc, 'D');
+  let dstOc = dst.getDict(dst.catalog, 'OCProperties');
+  if (!dstOc) {
+    dstOc = copyGraph(src, dst, srcOc, map, new Set(), drop) as Dict;
+    if (dstOc instanceof Ref) dstOc = dst.resolve<Dict>(dstOc);
+    // Layers of pages that were not copied are left out.
+    dstOc.set('OCGs', mapped(src.getArray(srcOc, 'OCGs')));
+    dst.catalog.set('OCProperties', dstOc);
+  } else {
+    const ocgs = (dst.getArray(dstOc, 'OCGs') || []).slice();
+    for (const r of mapped(src.getArray(srcOc, 'OCGs'))) if (!ocgs.some((o) => o instanceof Ref && o.num === r.num)) ocgs.push(r);
+    dstOc.set('OCGs', ocgs);
+    let dd = dst.getDict(dstOc, 'D');
+    if (!dd) { dd = new Dict(); dstOc.set('D', dd); }
+    const off = (dst.getArray(dd, 'OFF') || []).slice();
+    for (const r of mapped(d ? src.getArray(d, 'OFF') : null)) if (!off.some((o) => o instanceof Ref && o.num === r.num)) off.push(r);
+    if (off.length) dd.set('OFF', off);
+    const order = (dst.getArray(dd, 'Order') || []).slice();
+    for (const r of mapped(src.getArray(srcOc, 'OCGs'))) if (!order.some((o) => o instanceof Ref && o.num === r.num)) order.push(r);
+    dd.set('Order', order);
+    const r = dst.catalog.get('OCProperties'); if (r instanceof Ref) dst.update(r, dstOc);
+  }
+  dst.update(dst.catalogRef, dst.catalog);
 }
 
 /** A new document holding the given pages of `src`. */
