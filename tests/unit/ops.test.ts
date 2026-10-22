@@ -10,8 +10,9 @@ import { pageRuns, replaceRunText, eraseArea, insertText } from '../../src/pdf/o
 import { listFonts, stats, hiddenInformation, sanitize, archivalCheck, accessibilityCheck, accessibilityFix } from '../../src/pdf/ops/optimize';
 import { repairPdf } from '../../src/pdf/repair';
 import { Lexer } from '../../src/pdf/lexer';
+import { latin1 } from '../../src/pdf/objects';
 
-const latin = (b: Uint8Array) => new TextDecoder('latin1').decode(b);
+const latin = (b: Uint8Array) => latin1(b);
 const bytes = (s: string) => new TextEncoder().encode(s);
 const latinBytes = (s: string) => Uint8Array.from(s, (c) => c.charCodeAt(0) & 0xff);
 
