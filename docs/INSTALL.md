@@ -25,7 +25,7 @@ Run the setup file. SmartScreen may say "Windows protected your PC": choose **Mo
 Open the `.dmg` and drag Anne's Folio to Applications. The app has an ad-hoc signature but is not notarized by Apple. So the first time, **right-click (or Control-click) the app ▸ Open ▸ Open**. On macOS 15 and later, you may instead need to go to **System Settings ▸ Privacy & Security ▸ Open Anyway** after the first attempt. If macOS reports the app as "damaged", run this once in Terminal:
 
 ```bash
-xattr -dr com.apple.quarantine /Applications/QuillFolio.app
+xattr -dr com.apple.quarantine "/Applications/Anne's Folio.app"
 ```
 
 ## Linux and Raspberry Pi OS
