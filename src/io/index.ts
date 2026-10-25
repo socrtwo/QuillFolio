@@ -14,7 +14,7 @@ export const FORMATS: FormatDef[] = [
   { id: 'pdf', label: 'PDF Document', ext: ['pdf'], mime: 'application/pdf', canImport: true, canExport: true, kind: 'pdf' },
   { id: 'xfdf', label: 'XFDF Form and Comment Data', ext: ['xfdf'], mime: 'application/vnd.adobe.xfdf', canImport: true, canExport: true, kind: 'form-data' },
   { id: 'fdf', label: 'FDF Form Data', ext: ['fdf'], mime: 'application/vnd.fdf', canImport: true, canExport: true, kind: 'form-data' },
-  { id: 'qfr', label: 'QuillFolio Review Package', ext: ['qfr'], mime: 'application/x-quillfolio-review', canImport: true, canExport: true, kind: 'package' },
+  { id: 'qfr', label: 'Anne\'s Folio Review Package', ext: ['qfr'], mime: 'application/x-quillfolio-review', canImport: true, canExport: true, kind: 'package' },
   { id: 'png', label: 'PNG Image', ext: ['png'], mime: 'image/png', canImport: true, canExport: true, kind: 'image' },
   { id: 'jpeg', label: 'JPEG Image', ext: ['jpg', 'jpeg'], mime: 'image/jpeg', canImport: true, canExport: true, kind: 'image' },
   { id: 'gif', label: 'GIF Image', ext: ['gif'], mime: 'image/gif', canImport: true, canExport: false, kind: 'image' },
@@ -131,7 +131,7 @@ export async function openAsPdf(data: Uint8Array, name: string, opts: { password
     return { ...r, format };
   }
   if (format === 'xfdf' || format === 'fdf' || format === 'json') throw new Error(`${formatById(format)?.label || format} holds form or comment data: open the PDF first, then use Forms ▸ Import Data or Comment ▸ Import Comments.`);
-  throw new Error(`QuillFolio cannot open ${name}.`);
+  throw new Error(`Anne's Folio cannot open ${name}.`);
 }
 
 export function htmlToText(html: string): string {
@@ -168,7 +168,7 @@ export async function imageSpecFromBytes(data: Uint8Array, format?: string): Pro
   if (f === 'tiff') {
     const { tiffToBmp } = await import('./tiff');
     const bmp = tiffToBmp(data);
-    if (!bmp) throw new Error('This TIFF uses a compression QuillFolio cannot read (baseline, PackBits and LZW are supported).');
+    if (!bmp) throw new Error('This TIFF uses a compression Anne\'s Folio cannot read (baseline, PackBits and LZW are supported).');
     bytes = bmp; mime = 'image/bmp';
   }
   if (typeof createImageBitmap !== 'function' || typeof document === 'undefined') throw new Error('Image decoding needs a browser.');

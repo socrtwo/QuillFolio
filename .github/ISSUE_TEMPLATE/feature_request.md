@@ -6,7 +6,7 @@ labels: enhancement
 assignees: ''
 ---
 
-**What would you like QuillFolio to do?**
+**What would you like Anne's Folio to do?**
 A clear description of the feature or command.
 
 **Where should it live?**

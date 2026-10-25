@@ -1,6 +1,6 @@
-# QuillFolio for Android
+# Anne's Folio for Android
 
-The Android app is the QuillFolio web app (TypeScript/Vite, built into `dist/`) wrapped with
+The Android app is the Anne's Folio web app (TypeScript/Vite, built into `dist/`) wrapped with
 [Capacitor 8](https://capacitorjs.com/). The native project lives in `android/` and is committed;
 `npx cap sync android` copies the web build into it and regenerates the Capacitor plugin glue.
 
@@ -65,7 +65,7 @@ Publishing:
   match `package.json`.
 - **Prerelease from any branch, without tagging:** Actions -> *Android* -> *Run workflow*, choose the
   branch, tick **prerelease**. This publishes a GitHub prerelease called
-  `QuillFolio <version> (build <run number>)` under the tag `v<version>-build.<run number>` pointing at
+  `Anne's Folio <version> (build <run number>)` under the tag `v<version>-build.<run number>` pointing at
   that commit.
 
 ## Signing
@@ -93,7 +93,7 @@ keytool -genkeypair -v \
   -keystore quillfolio-release.jks \
   -alias quillfolio \
   -keyalg RSA -keysize 4096 -validity 10000 \
-  -dname "CN=QuillFolio, O=QuillFolio, C=US"
+  -dname "CN=Anne's Folio, O=Anne's Folio, C=US"
 ```
 
 Keep the `.jks` file and its passwords somewhere safe and **never commit it** (`*.jks` and `*.keystore`
@@ -144,15 +144,15 @@ The `.aab` is for Google Play only; it cannot be installed directly.
 - **Open / Save As** use the system file picker (Storage Access Framework), so files in Drive,
   Dropbox, SD cards, etc. work and no storage permission is needed. Ctrl+S writes back to the same
   PDF via a persisted URI permission (an incremental update by default).
-- **Open with QuillFolio** (`ACTION_VIEW`) for `.pdf`, `.fdf`, `.xfdf`, `.qfr`, pictures (`.png`, `.jpg`, `.gif`, `.webp`, `.bmp`,
+- **Open with Anne's Folio** (`ACTION_VIEW`) for `.pdf`, `.fdf`, `.xfdf`, `.qfr`, pictures (`.png`, `.jpg`, `.gif`, `.webp`, `.bmp`,
   `.tif`), `.txt`, `.md`, `.html`, `.json` and `.zip`. Files are matched by MIME type (`application/pdf`, `application/vnd.fdf`,
   `application/vnd.adobe.xfdf`, `application/x-quillfolio-review`, `image/*`, `text/markdown`, `text/plain`, `text/html`) and, for
   providers that report a generic type, by extension.
-- **Share to QuillFolio** (`ACTION_SEND`, `ACTION_SEND_MULTIPLE`) for the same types. Text shared without a file arrives
+- **Share to Anne's Folio** (`ACTION_SEND`, `ACTION_SEND_MULTIPLE`) for the same types. Text shared without a file arrives
   as a `.txt` file and becomes a PDF page.
 - **Print** goes through Android's print service, which also offers *Save as PDF*.
 - **Share** sends the exported file to any app via the share sheet.
-- The activity is `singleTask`, so opening another file while QuillFolio runs delivers it to the running
+- The activity is `singleTask`, so opening another file while Anne's Folio runs delivers it to the running
   instance (`fileOpened` event).
 
 ## Native plugin API (`QuillNative`)
@@ -184,7 +184,7 @@ Notes:
 
 ## App icon
 
-The launcher icon is the Quill suite icon for this app: a white page with a folded corner and a white quill on a
+The launcher icon is the Anne's Office suite icon for this app: a white page with a folded corner and a white quill on a
 dark red tile. Its sources are `resources/icon.svg` (the full tile), `resources/icon-foreground.svg` (the
 adaptive-icon foreground, artwork inside the safe zone) and `resources/icon-background.txt` (the
 adaptive background color, `#A6303B`). `node scripts/gen-android-icons.mjs` writes from them:

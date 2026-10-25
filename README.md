@@ -1,8 +1,8 @@
-# QuillFolio
+# Anne's Folio
 
-*Part of the Quill suite: [QuillPen](https://github.com/socrtwo/QuillPen) (documents), [QuillGrid](https://github.com/socrtwo/QuillGrid) (spreadsheets), [QuillPost](https://github.com/socrtwo/QuillPost) (email), [QuillStage](https://github.com/socrtwo/QuillStage) (presentations), [QuillLoom](https://github.com/socrtwo/QuillLoom) (web sites), [QuillPress](https://github.com/socrtwo/QuillPress) (desktop publishing) and **QuillFolio** (PDF).*
+*Part of the Anne's Office suite: [Anne's Pen](https://github.com/socrtwo/QuillPen) (documents), [Anne's Grid](https://github.com/socrtwo/QuillGrid) (spreadsheets), [Anne's Post](https://github.com/socrtwo/QuillPost) (email), [Anne's Stage](https://github.com/socrtwo/QuillStage) (presentations), [Anne's Loom](https://github.com/socrtwo/QuillLoom) (web sites), [Anne's Press](https://github.com/socrtwo/QuillPress) (desktop publishing) and **Anne's Folio** (PDF).*
 
-An original, open-source PDF app for Android, iOS, Windows, macOS, Linux, ChromeOS and the web, focused on viewing, editing, forms, signing, OCR and repair. Its goal is the same as the rest of the Quill suite: **no missing commands**. QuillFolio gives you a familiar workflow (tabs for Home, Edit, View, Comment, Forms, Protect, Sign, Organize Pages, Scan/OCR, Review, Tools, AI, Developer and Help) on top of its own PDF engine, which reads, repairs, edits and writes the files; pages are drawn by pdf.js. Every feature is a command, and every command can be put on the Quick Access Bar, on your own tab, on a keyboard shortcut, or in a macro, and found with command search. When a PDF is damaged, QuillFolio rebuilds what it can and shows a repair report instead of refusing to open it.
+An original, open-source PDF app for Android, iOS, Windows, macOS, Linux, ChromeOS and the web, focused on viewing, editing, forms, signing, OCR and repair. Its goal is the same as the rest of the Anne's Office suite: **no missing commands**. Anne's Folio gives you a familiar workflow (tabs for Home, Edit, View, Comment, Forms, Protect, Sign, Organize Pages, Scan/OCR, Review, Tools, AI, Developer and Help) on top of its own PDF engine, which reads, repairs, edits and writes the files; pages are drawn by pdf.js. Every feature is a command, and every command can be put on the Quick Access Bar, on your own tab, on a keyboard shortcut, or in a macro, and found with command search. When a PDF is damaged, Anne's Folio rebuilds what it can and shows a repair report instead of refusing to open it.
 
 > **Status: first working version (0.1.0, milestone M1 with much of M2 and M3).** The app builds for the web, Android, iOS and desktop with the same CI and release workflows as the sister apps. What works today:
 >
@@ -22,10 +22,10 @@ An original, open-source PDF app for Android, iOS, Windows, macOS, Linux, Chrome
 ## Features and plan
 
 - **A complete command set.** Every command a desktop PDF program offers, tab by tab, plus commands adopted from other PDF tools, command-line utilities and viewers. See [docs/COMMANDS-PLAN.md](docs/COMMANDS-PLAN.md) and the generated [docs/COMMANDS.md](docs/COMMANDS.md).
-- **No missing commands.** Commands are data. The ribbon, the Quick Access Bar, custom tabs, context menus, keyboard shortcuts, macros and command search (Alt+Q) all refer to command ids, so anything QuillFolio can do can be placed anywhere.
+- **No missing commands.** Commands are data. The ribbon, the Quick Access Bar, custom tabs, context menus, keyboard shortcuts, macros and command search (Alt+Q) all refer to command ids, so anything Anne's Folio can do can be placed anywhere.
 - **Quick Access Bar** with the full desktop drop-down checklist (AutoSave, New, Open, Save, Email, Quick Print, Print, Spelling, Undo, Redo, Read Mode, Touch/Mouse Mode, Open Recent) and **Add All Choices**, which puts Save and Print first and everything else in alphabetical order. The bar can sit above or below the ribbon or at the bottom near the keyboard. See [docs/QAT.md](docs/QAT.md).
 - **Customize Tabs and Keyboard:** create tabs and groups, put any command in them, rename, reorder or hide built-in tabs, and rebind any command with conflict display. Layouts can be exported and imported.
-- **Its own engine, plus pdf.js for pixels.** QuillFolio's engine (src/pdf) is the document of record: it parses, repairs, edits and writes PDFs from the ISO 32000 specification. pdf.js (Apache 2.0) only rasterizes pages and extracts positioned text for display, selection and search. Saves append an incremental update by default, so the original bytes and any signatures stay intact; a full rewrite is one option away.
+- **Its own engine, plus pdf.js for pixels.** Anne's Folio's engine (src/pdf) is the document of record: it parses, repairs, edits and writes PDFs from the ISO 32000 specification. pdf.js (Apache 2.0) only rasterizes pages and extracts positioned text for display, selection and search. Saves append an incremental update by default, so the original bytes and any signatures stay intact; a full rewrite is one option away.
 - **Innovations from other PDF software,** credited in [docs/INNOVATIONS.md](docs/INNOVATIONS.md): a repair report with a diff of what was rebuilt and lost, a structure inspector with raw object view, a redaction log that travels with the file, review packages, a plain-language accessibility fixer, document similarity, batch processing, and more.
 - **AI tab (optional).** Summaries, questions over the pages that match them best, key points, tables and entities, labels for form fields, translation, comment rewriting and replies, OCR clean-up, alt text, redaction suggestions, bookmarks and an assistant. The setup wizard covers free and paid providers, local servers, and a **free on-device model** that works offline after one download. Several AIs can work on one request. Nothing is sent anywhere until you run an AI command.
 - **Spelling in many languages** for comments and form field values: offline dictionaries for every variety of English, and a **Spelling Dictionaries** wizard that downloads freely licensed dictionaries for 90+ other languages.
@@ -43,7 +43,7 @@ An original, open-source PDF app for Android, iOS, Windows, macOS, Linux, Chrome
 | Text, Markdown, HTML | As pages | Yes | Simple typesetter with the standard fonts; export the text of every page |
 | CSV tables | No | Yes | Tables detected from text positions |
 | ZIP of PDFs | Yes | Yes | Combined on open; split and batch results are ZIPs |
-| QuillFolio review package (.qfr) | Yes | Yes | ZIP of the PDF, its XFDF comments, audit log and report |
+| Anne's Folio review package (.qfr) | Yes | Yes | ZIP of the PDF, its XFDF comments, audit log and report |
 | PDF portfolios (collections) | Yes | No | The embedded files are listed and extracted |
 
 See [docs/FORMATS.md](docs/FORMATS.md).
@@ -59,29 +59,29 @@ Each release has builds for:
 - **ChromeOS** (Android app, Linux app or web app);
 - the **web** (static files; offline-capable and installable).
 
-On Android, QuillFolio registers for *Open with* and *Share to* on PDFs, pictures and text files and uses the system file picker, so files on the device, SD card and cloud providers all work. **Save** writes back to the same file.
+On Android, Anne's Folio registers for *Open with* and *Share to* on PDFs, pictures and text files and uses the system file picker, so files on the device, SD card and cloud providers all work. **Save** writes back to the same file.
 
 CI type-checks, tests and builds the web app and an APK on every push, and the **Release** workflow builds every platform and publishes them together from a tag `v*`, a manual run, or a `[release]` commit, as in the sister apps. See [docs/BUILD.md](docs/BUILD.md), [docs/INSTALL.md](docs/INSTALL.md) and [docs/ANDROID.md](docs/ANDROID.md).
 
-## The Quill suite
+## The Anne's Office suite
 
 | App | What it is | Repository |
 |---|---|---|
-| **QuillPen** | Word processor | https://github.com/socrtwo/QuillPen |
-| **QuillGrid** | Spreadsheet | https://github.com/socrtwo/QuillGrid |
-| **QuillPost** | Email | https://github.com/socrtwo/QuillPost |
-| **QuillStage** | Presentations | https://github.com/socrtwo/QuillStage |
-| **QuillLoom** | Web sites | https://github.com/socrtwo/QuillLoom |
-| **QuillPress** | Desktop publishing | https://github.com/socrtwo/QuillPress |
-| **QuillFolio** | PDF (this project) | https://github.com/socrtwo/QuillFolio |
+| **Anne's Pen** | Word processor | https://github.com/socrtwo/QuillPen |
+| **Anne's Grid** | Spreadsheet | https://github.com/socrtwo/QuillGrid |
+| **Anne's Post** | Email | https://github.com/socrtwo/QuillPost |
+| **Anne's Stage** | Presentations | https://github.com/socrtwo/QuillStage |
+| **Anne's Loom** | Web sites | https://github.com/socrtwo/QuillLoom |
+| **Anne's Press** | Desktop publishing | https://github.com/socrtwo/QuillPress |
+| **Anne's Folio** | PDF (this project) | https://github.com/socrtwo/QuillFolio |
 
-The apps share one application shell: the command registry, Quick Access Bar, customizable tabs and keyboard, command search, macro recorder, AI setup wizard and providers, spelling dictionaries, recovery engine and platform layer. The other apps export PDFs that QuillFolio opens, and QuillFolio hands documents to them through the share sheet and *Open with*.
+The apps share one application shell: the command registry, Quick Access Bar, customizable tabs and keyboard, command search, macro recorder, AI setup wizard and providers, spelling dictionaries, recovery engine and platform layer. The other apps export PDFs that Anne's Folio opens, and Anne's Folio hands documents to them through the share sheet and *Open with*.
 
 ## Documentation
 
 | File | Contents |
 |---|---|
-| [docs/INNOVATIONS.md](docs/INNOVATIONS.md) | Survey of PDF software, past and present, and what QuillFolio adopts from each |
+| [docs/INNOVATIONS.md](docs/INNOVATIONS.md) | Survey of PDF software, past and present, and what Anne's Folio adopts from each |
 | [docs/QAT.md](docs/QAT.md) | The Quick Access Bar, the drop-down choices and the Add All order |
 | [docs/COMMANDS-PLAN.md](docs/COMMANDS-PLAN.md) | The planned command inventory, tab by tab, with command ids |
 | [docs/COMMANDS.md](docs/COMMANDS.md) | Every implemented command (generated) |
@@ -106,4 +106,4 @@ The interface, code comments and documentation use American English. Spelling ch
 
 ## Legal
 
-QuillFolio is an independent, clean-room project released under the MIT License. It is not affiliated with, endorsed by, or sponsored by Adobe, Foxit, Nitro, Apple, Google, Microsoft, any AI provider, or any other vendor. Product names appear only to describe file-format compatibility or the origin of an idea (nominative use). Adobe, Acrobat and PDF are trademarks of Adobe Inc.; other names belong to their owners. The PDF format itself is an open ISO standard (ISO 32000). The interface, icons, templates and text are original or openly licensed. See [docs/LEGAL.md](docs/LEGAL.md).
+Anne's Folio is an independent, clean-room project released under the MIT License. It is not affiliated with, endorsed by, or sponsored by Adobe, Foxit, Nitro, Apple, Google, Microsoft, any AI provider, or any other vendor. Product names appear only to describe file-format compatibility or the origin of an idea (nominative use). Adobe, Acrobat and PDF are trademarks of Adobe Inc.; other names belong to their owners. The PDF format itself is an open ISO standard (ISO 32000). The interface, icons, templates and text are original or openly licensed. See [docs/LEGAL.md](docs/LEGAL.md).

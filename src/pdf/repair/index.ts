@@ -228,7 +228,7 @@ import * as filtersMod from '../filters';
 function requireFilters() { return filtersMod; }
 
 export function reportText(r: RepairReport): string {
-  const lines = [`QuillFolio repair report for ${r.fileName}`, r.summary, '', `Identified as: ${r.identification.description} (${r.identification.confidence})`, ''];
+  const lines = [`Anne's Folio repair report for ${r.fileName}`, r.summary, '', `Identified as: ${r.identification.description} (${r.identification.confidence})`, ''];
   for (const m of r.methods) lines.push(`[${m.status}] ${m.name}: ${m.detail}`);
   if (r.rebuilt.length) lines.push('', 'Rebuilt: ' + r.rebuilt.join(', '));
   if (r.lost.length) lines.push('', 'Lost: ' + r.lost.join('; '));

@@ -119,7 +119,7 @@ def([
         { key: 'who', label: 'Signers (one per line: Name <email>)', type: 'textarea', rows: 4, value: '' },
         { key: 'where', label: 'Put the fields on', type: 'radio', options: [{ value: 'last', label: 'The last page' }, { value: 'current', label: 'The current page' }], value: 'last' },
         { key: 'subject', label: 'Email subject', type: 'text', value: `Please sign: ${app.tab.title}` },
-        { key: 'msg', label: 'Message', type: 'textarea', rows: 3, value: `Please open the attached PDF in QuillFolio (or any PDF reader), sign in your field, and send it back.` },
+        { key: 'msg', label: 'Message', type: 'textarea', rows: 3, value: `Please open the attached PDF in Anne's Folio (or any PDF reader), sign in your field, and send it back.` },
       ], ok: 'Add Fields and Draft Email' });
       if (!r || !String(r.who).trim()) return;
       const signers = String(r.who).split('\n').map((l) => l.trim()).filter(Boolean).map((l) => { const m = /^(.*?)\s*<([^>]+)>\s*$/.exec(l); return { name: m ? m[1].trim() || m[2] : l, email: m ? m[2] : '' }; });
@@ -151,7 +151,7 @@ def([
       const items = sigs.map((s) => s.signed
         ? { level: (s.coversWholeFile ? 'info' : 'warning') as 'info' | 'warning', text: `${s.field}: signed by ${s.signer || 'unknown'}${s.date ? ` on ${s.date.toLocaleString()}` : ''}${s.reason ? `, reason: ${s.reason}` : ''} (${s.subFilter || s.filter})`, fix: s.coversWholeFile ? 'The byte range covers the whole file: nothing was appended after signing.' : 'The byte range does not cover the whole file: the document was changed after it was signed (incremental updates follow the signature). The cryptographic check of the certificate is not implemented in this version.' }
         : { level: 'info' as const, text: `${s.field}: unsigned signature field` });
-      app.ui.openPane('report', { title: 'Signatures', items, html: h('p', { class: 'ql-help' }, 'QuillFolio checks the byte ranges of existing signatures. Validating certificates and creating certificate-based signatures are on the roadmap; Fill & Sign places a visual signature.') });
+      app.ui.openPane('report', { title: 'Signatures', items, html: h('p', { class: 'ql-help' }, 'Anne\'s Folio checks the byte ranges of existing signatures. Validating certificates and creating certificate-based signatures are on the roadmap; Fill & Sign places a visual signature.') });
     },
   },
   {

@@ -1,6 +1,6 @@
 /**
  * The renderer: pdf.js (Apache 2.0) rasterizes pages and extracts positioned text for the viewer.
- * QuillFolio's own engine remains the document of record; pdf.js only ever reads the bytes the
+ * Anne's Folio's own engine remains the document of record; pdf.js only ever reads the bytes the
  * engine produces. The worker, CMaps, standard fonts and WASM decoders are bundled (scripts/copy-pdfjs.mjs).
  */
 import * as pdfjs from 'pdfjs-dist/legacy/build/pdf.mjs';

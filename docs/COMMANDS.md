@@ -1,6 +1,6 @@
-# QuillFolio Command Reference
+# Anne's Folio Command Reference
 
-QuillFolio ships **354 commands**. Every one can be placed on the Quick Access Bar, added to a custom tab, bound to a keyboard shortcut, recorded in a macro, or found with command search (Alt+Q).
+Anne's Folio ships **354 commands**. Every one can be placed on the Quick Access Bar, added to a custom tab, bound to a keyboard shortcut, recorded in a macro, or found with command search (Alt+Q).
 
 78 of them are "Commands Not in the Tabs" — reachable through the Quick Access Bar chooser, Customize Tabs, the command search, or menus — so nothing the app can do is hidden.
 
@@ -447,7 +447,7 @@ This file is generated from the source by `npm run catalog`; a unit test fails w
 
 | Command | Group | Shortcut | ID | Notes |
 |---|---|---|---|---|
-| About QuillFolio | Help |  | `help.about` |  |
+| About Anne's Folio | Help |  | `help.about` |  |
 | Check for Updates | Help |  | `help.updates` | not in tabs |
 | Command Reference | Help |  | `help.commandReference` |  |
 | Help | Help | F1 | `help.help` |  |

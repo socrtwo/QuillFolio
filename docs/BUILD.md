@@ -1,4 +1,4 @@
-# Building QuillFolio
+# Building Anne's Folio
 
 All platforms share one web build (`npm run build` → `dist/`). Each platform wraps it:
 
@@ -90,7 +90,7 @@ The manual steps the script performs, if you prefer to run them yourself:
 
 ```bash
 pkg update -y && pkg install -y git nodejs-lts openjdk-21 aapt aapt2 unzip wget zip
-git clone --depth 1 https://github.com/socrtwo/QuillFolio && cd QuillFolio
+git clone --depth 1 https://github.com/socrtwo/QuillFolio && cd Anne's Folio
 ELECTRON_SKIP_BINARY_DOWNLOAD=1 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci
 npm run build
 mkdir -p ~/android-sdk/cmdline-tools && cd ~/android-sdk/cmdline-tools
@@ -127,7 +127,7 @@ xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release -sd
 
 ## Icons
 
-`npm run icons` regenerates every icon from the sources `resources/icon.svg`, `resources/icon-foreground.svg` and `resources/icon-background.txt` (the Quill suite icon family): `scripts/gen-android-icons.mjs` writes the Android launcher icons, `resources/icon-square.svg` and `public/favicon.svg`, and `scripts/gen-platform-icons.mjs` the desktop, iOS and web-app PNGs. Rendering uses Playwright's Chromium.
+`npm run icons` regenerates every icon from the sources `resources/icon.svg`, `resources/icon-foreground.svg` and `resources/icon-background.txt` (the Anne's Office suite icon family): `scripts/gen-android-icons.mjs` writes the Android launcher icons, `resources/icon-square.svg` and `public/favicon.svg`, and `scripts/gen-platform-icons.mjs` the desktop, iOS and web-app PNGs. Rendering uses Playwright's Chromium.
 
 ## Command reference
 

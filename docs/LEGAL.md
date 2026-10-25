@@ -1,12 +1,12 @@
 # Clean-room, trademark and licensing notes
 
-This file records how QuillFolio provides a complete PDF command set while avoiding other vendors' trademarks and copyrights. It summarizes the project's practice, the same practice the rest of the Quill suite follows; it is not legal advice.
+This file records how Anne's Folio provides a complete PDF command set while avoiding other vendors' trademarks and copyrights. It summarizes the project's practice, the same practice the rest of the Anne's Office suite follows; it is not legal advice.
 
 ## What is reproduced, and why it is safe
 
 - **The file format.** PDF is an open standard, ISO 32000-1 (PDF 1.7) and ISO 32000-2 (PDF 2.0); the earlier versions were published by Adobe as open specifications. XFDF and FDF are published formats. The engine was written from those specifications and from the behavior of files produced by many programs, never from another product's code.
 - **Functionality and command names.** Operations such as Highlight, Sticky Note, Stamp, Redact, Fill & Sign, Organize Pages, Bates Numbering, Recognize Text and Flatten are functional ideas described with ordinary words used across the industry. Functionality is not protected by copyright, and descriptive terms are not trademarks for those functions.
-- **Tab and group organization.** Grouping commands under Home, Edit, View, Comment, Forms, Protect, Sign, Organize Pages, Scan/OCR, Review and Tools is a common, functional arrangement. QuillFolio's grouping, labels, tooltips and descriptions are written for this project.
+- **Tab and group organization.** Grouping commands under Home, Edit, View, Comment, Forms, Protect, Sign, Organize Pages, Scan/OCR, Review and Tools is a common, functional arrangement. Anne's Folio's grouping, labels, tooltips and descriptions are written for this project.
 - **Keyboard shortcuts.** Long-standing conventions (Ctrl+F to find, Ctrl+P to print, Ctrl+Shift+D to add a bookmark); all can be rebound.
 - **Rendering.** pdf.js (Mozilla, Apache 2.0) rasterizes pages. Its license permits this use and is reproduced in the third-party notices.
 
@@ -15,7 +15,7 @@ This file records how QuillFolio provides a complete PDF command set while avoid
 - No vendor logos, icons, splash screens, color schemes or trade dress. Command icons are Google's Material Symbols (Apache 2.0). The app icon and visual design are original.
 - No vendor product names in the app's own name or interface. Brand-specific feature names are replaced with generic terms:
 
-| Vendor term | QuillFolio term |
+| Vendor term | Anne's Folio term |
 |---|---|
 | Acrobat, Reader (as feature names) | not used; "PDF" names the format |
 | Fill & Sign (also used generically by several products) | Fill & Sign (descriptive) |
@@ -35,7 +35,7 @@ This file records how QuillFolio provides a complete PDF command set while avoid
 
 ## Nominative use
 
-QuillFolio's documentation names other products (Adobe Acrobat and Reader, Foxit, Nitro, PDF-XChange, Apple Preview, Sumatra PDF, Okular, Evince, MuPDF, Ghostscript, qpdf, pdftk, PDFsam, poppler, Bluebeam, pdf.js, Chromium, Microsoft Office, LibreOffice and others) only to identify file formats or to credit where an idea came from. This is nominative use; it does not imply affiliation, sponsorship or endorsement. The names are trademarks of their respective owners, including:
+Anne's Folio's documentation names other products (Adobe Acrobat and Reader, Foxit, Nitro, PDF-XChange, Apple Preview, Sumatra PDF, Okular, Evince, MuPDF, Ghostscript, qpdf, pdftk, PDFsam, poppler, Bluebeam, pdf.js, Chromium, Microsoft Office, LibreOffice and others) only to identify file formats or to credit where an idea came from. This is nominative use; it does not imply affiliation, sponsorship or endorsement. The names are trademarks of their respective owners, including:
 
 - Adobe, Acrobat, Acrobat Reader and Document Cloud are trademarks of Adobe Inc. PDF is also a registered trademark of Adobe for its software; the file format is an open ISO standard.
 - Foxit is a trademark of Foxit Software Inc.; Nitro of Nitro Software; PDF-XChange of Tracker Software; Bluebeam of Bluebeam, Inc.
@@ -61,7 +61,7 @@ Generated into `third-party-notices.txt` at build time from `package.json`. Only
 
 ## Online services
 
-QuillFolio has no server. It reaches the network only when you ask it to:
+Anne's Folio has no server. It reaches the network only when you ask it to:
 
 - **AI providers** you set up (your own key), and the on-device model download on first use;
 - **Spelling dictionaries** downloaded from the catalog's sources;

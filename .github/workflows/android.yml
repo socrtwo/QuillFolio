@@ -73,7 +73,7 @@ jobs:
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "QuillFolio version $VERSION, versionCode $VERSION_CODE"
+          echo "Anne's Folio version $VERSION, versionCode $VERSION_CODE"
           if [[ "$GITHUB_REF" == refs/tags/v* && "${GITHUB_REF#refs/tags/v}" != "$VERSION" ]]; then
             echo "::warning::Tag ${GITHUB_REF#refs/tags/} does not match package.json version $VERSION"
           fi
@@ -153,7 +153,7 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.version }}-build.${{ github.run_number }}
           target_commitish: ${{ github.sha }}
-          name: QuillFolio ${{ steps.version.outputs.version }} (build ${{ github.run_number }})
+          name: Anne's Folio ${{ steps.version.outputs.version }} (build ${{ github.run_number }})
           prerelease: true
           generate_release_notes: true
           body: |

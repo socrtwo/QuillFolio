@@ -6,8 +6,9 @@
 /** @type {import('electron-builder').Configuration} */
 module.exports = {
   appId: 'io.github.socrtwo.quillfolio',
-  productName: 'QuillFolio',
-  copyright: 'QuillFolio contributors, MIT License',
+  productName: 'Anne\'s Folio',
+  executableName: 'QuillFolio', // the binary keeps its old name; the product (display) name is Anne's Folio
+  copyright: 'Anne\'s Folio contributors, MIT License',
   directories: { app: 'build/desktop-app', output: 'release', buildResources: 'resources' },
   artifactName: 'QuillFolio-${version}-${os}-${arch}.${ext}',
   asar: true,
@@ -18,7 +19,7 @@ module.exports = {
     { ext: 'pdf', name: 'PDF Document', role: 'Editor', mimeType: 'application/pdf' },
     { ext: 'fdf', name: 'PDF Form Data', role: 'Viewer', mimeType: 'application/vnd.fdf' },
     { ext: 'xfdf', name: 'XFDF Form and Comment Data', role: 'Viewer', mimeType: 'application/vnd.adobe.xfdf' },
-    { ext: 'qfr', name: 'QuillFolio Review Package', role: 'Editor', mimeType: 'application/x-quillfolio-review' },
+    { ext: 'qfr', name: 'Anne\'s Folio Review Package', role: 'Editor', mimeType: 'application/x-quillfolio-review' },
   ],
   win: {
     target: [{ target: 'nsis', arch: ['x64', 'arm64'] }, { target: 'portable', arch: ['x64'] }],
@@ -28,7 +29,7 @@ module.exports = {
   mac: {
     target: [{ target: 'dmg', arch: ['universal'] }, { target: 'zip', arch: ['universal'] }],
     category: 'public.app-category.productivity',
-    extendInfo: { CFBundleDisplayName: 'QuillFolio' },
+    extendInfo: { CFBundleDisplayName: 'Anne\'s Folio' },
     // Ad-hoc signature: runs on Apple silicon without a paid Developer ID, but is not notarized,
     // so Gatekeeper asks once (docs/INSTALL.md). Hardened runtime would reject Electron's own signature.
     identity: '-',
@@ -39,7 +40,7 @@ module.exports = {
     target: [{ target: 'AppImage', arch: ['x64', 'arm64', 'armv7l'] }, { target: 'deb', arch: ['x64', 'arm64', 'armv7l'] }],
     category: 'Office;Viewer;Graphics',
     synopsis: 'PDF viewer and editor with forms, signing, OCR and repair',
-    description: 'QuillFolio is an open-source PDF app: view, comment, edit, fill forms, sign, recognize text in scans and repair damaged files. Every feature is a command you can put on the ribbon, the Quick Access Bar, a shortcut or a macro.',
+    description: 'Anne\'s Folio is an open-source PDF app: view, comment, edit, fill forms, sign, recognize text in scans and repair damaged files. Every feature is a command you can put on the ribbon, the Quick Access Bar, a shortcut or a macro.',
     maintainer: 'socrtwo <socrtwo@users.noreply.github.com>',
     executableName: 'quillfolio',
     syncDesktopName: true,

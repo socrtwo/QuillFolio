@@ -95,7 +95,7 @@ export class PdfDocument {
     doc.report.header = '%PDF-1.7';
     const pages = doc.register(new Dict({ Type: Name.get('Pages'), Kids: [], Count: 0 }));
     const cat = doc.register(new Dict({ Type: Name.get('Catalog'), Pages: pages }));
-    const info = doc.register(new Dict({ Producer: PdfString.fromText('QuillFolio'), Creator: PdfString.fromText('QuillFolio'), CreationDate: pdfDate(), ModDate: pdfDate() }));
+    const info = doc.register(new Dict({ Producer: PdfString.fromText('Anne\'s Folio'), Creator: PdfString.fromText('Anne\'s Folio'), CreationDate: pdfDate(), ModDate: pdfDate() }));
     doc.trailer = new Dict({ Root: cat, Info: info, Size: doc.nextNum });
     doc.dirty = true;
     return doc;

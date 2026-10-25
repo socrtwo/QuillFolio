@@ -35,7 +35,7 @@ Results can be copied, saved as text or CSV, added as a note on the page, or app
 
 ## Privacy
 
-- **QuillFolio has no server.** Requests go directly from the device to the provider you chose.
+- **Anne's Folio has no server.** Requests go directly from the device to the provider you chose.
 - Only the text a command works on is sent: the selection, the current page, the matching pages for a question, or the document text (truncated to about 24,000 characters) for whole-document commands. Pictures are sent only by Alt Text for Images.
 - The on-device model never sends anything.
 - **AI & Privacy** (`ai.privacy`) shows the active provider and what is sent; **Stop AI** (`ai.stop`) cancels a request.

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Generates every Android icon, and the shared icon files the other platforms start from, out of the
-// app's icon sources (the Quill suite icon family):
+// app's icon sources (the Anne's Office suite icon family):
 //
 // Sources (edit these, not the outputs):
 //   resources/icon.svg              full tile: rounded square with its gradient (desktop, PWA, README)

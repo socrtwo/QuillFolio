@@ -43,13 +43,13 @@ describe('filters and hashes', () => {
 
 describe('document round trips', () => {
   it('creates, saves and reloads a text PDF', () => {
-    const bytes = makeTextPdf(['Hello QuillFolio', 'Second page']);
+    const bytes = makeTextPdf(['Hello Anne\'s Folio', 'Second page']);
     expect(latin1(bytes, 0, 8)).toBe('%PDF-1.7');
     const doc = PdfDocument.load(bytes);
     expect(doc.pageCount).toBe(2);
     expect(doc.report.reconstructed).toBe(false);
     const pt = analyzeContent(doc, parseContent(doc.pageContent(doc.pages[0])), doc.pages[0].resources);
-    expect(pt.runs.map((r) => r.text).join('')).toContain('Hello QuillFolio');
+    expect(pt.runs.map((r) => r.text).join('')).toContain('Hello Anne\'s Folio');
     // Incremental update: a third page.
     addTextPage(doc, 'Third');
     const inc = doc.save({ incremental: true });

@@ -24,7 +24,7 @@ async function spelling(app: App): Promise<void> {
   const m = readMetadata(app.doc);
   const dict = (await dictionaryKey(m.language || app.prefs.language, app.prefs.spellDialect)) || 'any';
   const targets = spellTargets(allAnnotations(app.doc), readFields(app.doc), { fromPage: app.page });
-  if (!targets.length) { toast('Nothing to check: QuillFolio checks the spelling of comments and form field values (page text is read-only).'); return; }
+  if (!targets.length) { toast('Nothing to check: Anne\'s Folio checks the spelling of comments and form field values (page text is read-only).'); return; }
   const ignored = new Set(app.prefs.ignoredWords.map((w) => w.toLowerCase()));
   const dictionary = new Set(app.prefs.dictionary.map((w) => w.toLowerCase()));
   const session = new SpellSession(targets, workerChecker, {
@@ -197,7 +197,7 @@ def([
       const d = app.doc;
       const items: { level: 'info' | 'warning'; text: string }[] = [{ level: 'info', text: `PDF version ${d.report.header || 'unknown'}${d.usesXrefStream ? ', cross-reference streams (PDF 1.5+)' : ''}` }];
       if (d.security) items.push({ level: 'warning', text: `Encrypted with ${d.securityInfo?.method.toUpperCase()} (AES-256 needs readers for PDF 1.7 extension level 3 / PDF 2.0).` });
-      if (d.getDict(d.catalog, 'AcroForm')?.has('XFA')) items.push({ level: 'warning', text: 'XFA forms are present: only some readers show them; QuillFolio shows the AcroForm fallback.' });
+      if (d.getDict(d.catalog, 'AcroForm')?.has('XFA')) items.push({ level: 'warning', text: 'XFA forms are present: only some readers show them; Anne\'s Folio shows the AcroForm fallback.' });
       if (d.getDict(d.catalog, 'OCProperties')) items.push({ level: 'warning', text: 'Optional content (layers) needs PDF 1.5+.' });
       if (d.getDict(d.catalog, 'Collection')) items.push({ level: 'warning', text: 'A portfolio (collection) needs PDF 1.7+; other readers show only the cover sheet.' });
       const fonts = listFonts(d);

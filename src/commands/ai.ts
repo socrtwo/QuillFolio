@@ -40,7 +40,7 @@ export async function ensureAiReady(app: App, reason = 'This command needs an AI
   const ids = aiRecipients().filter((id) => cloudId(id) && !aiSettings().privacyAck.includes(id));
   if (!ids.length) return true;
   const free = ids.some((id) => providerById(id)?.free === 'free');
-  const ok = await confirmDialog('Sending Text to an AI Service', `AI commands send only the page text they need directly from this device to ${names(ids)}. QuillFolio has no server and keeps no copy. The service's terms and privacy policy apply${free ? ', and free tiers may use what you send to improve their models' : ''}. For confidential documents, use the on-device model. Continue?`, 'Continue', 'Cancel');
+  const ok = await confirmDialog('Sending Text to an AI Service', `AI commands send only the page text they need directly from this device to ${names(ids)}. Anne's Folio has no server and keeps no copy. The service's terms and privacy policy apply${free ? ', and free tiers may use what you send to improve their models' : ''}. For confidential documents, use the on-device model. Continue?`, 'Continue', 'Cancel');
   if (ok) saveAiSettings((x) => { for (const id of ids) if (!x.privacyAck.includes(id)) x.privacyAck.push(id); });
   return ok;
 }
@@ -143,7 +143,7 @@ def([
     run: async () => {
       const p = providerById(aiSettings().active || '');
       await openDialog({ title: 'AI & Privacy', ok: 'Close', cancel: false, fields: [{ key: 'i', type: 'info', html: [
-        '<p><b>QuillFolio has no server.</b> AI requests go directly from this device to the provider you choose, using your own key. Nothing is sent until you run an AI command.</p>',
+        '<p><b>Anne\'s Folio has no server.</b> AI requests go directly from this device to the provider you choose, using your own key. Nothing is sent until you run an AI command.</p>',
         `<p><b>Active provider:</b> ${p ? esc(p.name) : 'none'}${p && (p.kind === 'local' || p.kind === 'builtin') ? ' — runs on this device; your document does not leave it.' : p ? ' — the text a command needs (the selection, the page, or the document text for whole-document commands) is sent to this service; its terms apply.' : ''}</p>`,
         activeEnsemble() ? `<p><b>Several AIs are on.</b> Each AI command sends the same text to every one of these services: ${esc(names(aiRecipients()))}.</p>` : '',
         '<p><b>Pictures</b> are sent only by Generate Alt Text, and only the pictures on the page you choose.</p>',
@@ -280,7 +280,7 @@ def([
         if (a == null) return;
         results.push({ im, alt: cleanText(a).replace(/^"|"$/g, '') });
       }
-      const r = await openDialog({ title: 'Alt Text', wide: true, fields: results.map((x, i) => ({ key: String(i), label: `${x.im.name} (${x.im.width}×${x.im.height})`, type: 'text' as const, value: x.alt })), ok: 'Store', help: 'Stored as /Alt on each image object. Screen readers use structure tags, which QuillFolio cannot create for existing content; the text is kept for tools that read it from the image.' });
+      const r = await openDialog({ title: 'Alt Text', wide: true, fields: results.map((x, i) => ({ key: String(i), label: `${x.im.name} (${x.im.width}×${x.im.height})`, type: 'text' as const, value: x.alt })), ok: 'Store', help: 'Stored as /Alt on each image object. Screen readers use structure tags, which Anne\'s Folio cannot create for existing content; the text is kept for tools that read it from the image.' });
       if (!r) return;
       app.edit('Alt Text', (doc) => { results.forEach((x, i) => { if (!r[String(i)]) return; const s = doc.resolve(x.im.ref!) as any; if (s?.dict) { s.dict.set('Alt', PdfString.fromText(String(r[String(i)]))); doc.update(x.im.ref!, s); } }); });
     },

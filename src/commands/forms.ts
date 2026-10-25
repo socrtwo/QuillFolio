@@ -42,7 +42,7 @@ export async function fillValue(app: App, name?: string): Promise<void> {
   else if (f.type === 'combo') field = { key: 'v', label: f.tooltip || f.name, type: 'combo', options: opts.map((o) => o.value), value: typeof f.value === 'string' ? f.value : '' };
   else if (f.type === 'list') field = { key: 'v', label: f.tooltip || f.name, type: 'list', multiple: (f.flags & (1 << 21)) !== 0, options: opts, value: f.value };
   else if (f.type === 'signature') { app.exec('sign.signature'); return; }
-  else if (f.type === 'button') { toast('Buttons run actions in other readers; QuillFolio never runs document scripts.'); return; }
+  else if (f.type === 'button') { toast('Buttons run actions in other readers; Anne\'s Folio never runs document scripts.'); return; }
   else field = { key: 'v', label: f.tooltip || f.name, type: f.multiline ? 'textarea' : f.password ? 'password' : 'text', rows: 4, value: typeof f.value === 'string' ? f.value : '', autofocus: true };
   const r = await openDialog({ title: `Fill: ${f.name}`, fields: [field, ...(f.maxLen ? [{ key: 'i', type: 'info' as const, html: `<p class="ql-help">At most ${f.maxLen} characters.</p>` }] : [])], ok: 'Set' });
   if (!r) return;
@@ -160,7 +160,7 @@ def([
   },
   {
     id: 'forms.calcOrder', label: 'Calculation Order…', icon: 'calculate', tab: 'Forms', group: 'Edit',
-    tip: 'The order fields with calculations are recomputed in (QuillFolio records the order; it never runs field scripts)',
+    tip: 'The order fields with calculations are recomputed in (Anne\'s Folio records the order; it never runs field scripts)',
     run: async (app) => {
       const names = readFields(app.doc).map((f) => f.name);
       if (!names.length) { toast('The document has no form fields.'); return; }

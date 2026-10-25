@@ -1,6 +1,6 @@
 # Repairing damaged PDFs
 
-QuillFolio opens damaged PDFs instead of refusing them. The pipeline lives in `src/pdf/repair/index.ts` and runs automatically when the normal parse fails or yields no pages; `File ▸ Open and Repair` forces it and `File ▸ Recover Data from Any File` runs it on anything.
+Anne's Folio opens damaged PDFs instead of refusing them. The pipeline lives in `src/pdf/repair/index.ts` and runs automatically when the normal parse fails or yields no pages; `File ▸ Open and Repair` forces it and `File ▸ Recover Data from Any File` runs it on anything.
 
 ## Lineage
 

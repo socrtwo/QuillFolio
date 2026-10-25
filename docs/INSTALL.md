@@ -1,4 +1,4 @@
-# Installing QuillFolio
+# Installing Anne's Folio
 
 Every release on the [Releases](https://github.com/socrtwo/QuillFolio/releases) page has a build for each platform, plus `SHA256SUMS.txt` to check the downloads. The builds are not signed with paid store certificates, so each system asks once whether to trust them. The steps are below.
 
@@ -18,11 +18,11 @@ Every release on the [Releases](https://github.com/socrtwo/QuillFolio/releases) 
 
 ## Windows
 
-Run the setup file. SmartScreen may say "Windows protected your PC": choose **More info ▸ Run anyway**. The warning appears because the installer is not signed with a paid code-signing certificate. PDFs (and .fdf, .xfdf and .qfr files) get **Open with ▸ QuillFolio**.
+Run the setup file. SmartScreen may say "Windows protected your PC": choose **More info ▸ Run anyway**. The warning appears because the installer is not signed with a paid code-signing certificate. PDFs (and .fdf, .xfdf and .qfr files) get **Open with ▸ Anne's Folio**.
 
 ## macOS
 
-Open the `.dmg` and drag QuillFolio to Applications. The app has an ad-hoc signature but is not notarized by Apple. So the first time, **right-click (or Control-click) the app ▸ Open ▸ Open**. On macOS 15 and later, you may instead need to go to **System Settings ▸ Privacy & Security ▸ Open Anyway** after the first attempt. If macOS reports the app as "damaged", run this once in Terminal:
+Open the `.dmg` and drag Anne's Folio to Applications. The app has an ad-hoc signature but is not notarized by Apple. So the first time, **right-click (or Control-click) the app ▸ Open ▸ Open**. On macOS 15 and later, you may instead need to go to **System Settings ▸ Privacy & Security ▸ Open Anyway** after the first attempt. If macOS reports the app as "damaged", run this once in Terminal:
 
 ```bash
 xattr -dr com.apple.quarantine /Applications/QuillFolio.app
@@ -36,7 +36,7 @@ xattr -dr com.apple.quarantine /Applications/QuillFolio.app
 sudo apt install ./QuillFolio-<v>-linux-arm64.deb     # or -amd64 / -armv7l
 ```
 
-QuillFolio then appears in the Office menu, and PDF files offer **Open With ▸ QuillFolio**. To remove it: `sudo apt remove quillfolio`.
+Anne's Folio then appears in the Office menu, and PDF files offer **Open With ▸ Anne's Folio**. To remove it: `sudo apt remove quillfolio`.
 
 AppImage (any distribution, no install):
 
@@ -53,7 +53,7 @@ Pick one:
 
 1. **Android app**: on Chromebooks with Google Play, install the APK (it requires Android app sideloading or developer mode) or use the Play Store build when it is published.
 2. **Linux app**: turn on **Settings ▸ Advanced ▸ Developers ▸ Linux development environment**. Then double-click the `.deb` in the Files app: use `amd64` on Intel/AMD Chromebooks and `arm64` on ARM Chromebooks.
-3. **Web app**: open a hosted copy of QuillFolio in Chrome, then **⋮ ▸ Cast, save and share ▸ Install page as app**. It then works offline and opens PDF, picture and text files from the Files app.
+3. **Web app**: open a hosted copy of Anne's Folio in Chrome, then **⋮ ▸ Cast, save and share ▸ Install page as app**. It then works offline and opens PDF, picture and text files from the Files app.
 
 ## Android
 
@@ -66,7 +66,7 @@ Apple only allows apps from the App Store or apps signed for your own devices. T
 - **Sideloadly** or **AltStore** (Windows/macOS): drag in the `.ipa` and sign in with your Apple ID. A free Apple ID signs for 7 days at a time; a paid developer account signs for a year.
 - **Xcode** (macOS): build from source with `npm run ios:sync`, open `ios/App/App.xcodeproj`, pick your team under *Signing & Capabilities*, and run on your device.
 
-On iOS, PDFs appear in the Files app's **Open in** and **Share** menus. **Save** writes to **Files ▸ On My iPhone ▸ QuillFolio**, and **Open** uses the system file picker. **Share** offers the share sheet. The iOS build uses the web versions of these functions; Android has a native plugin with more features (writing back to a file opened from another app, **Open with** from other apps, printing through the system service).
+On iOS, PDFs appear in the Files app's **Open in** and **Share** menus. **Save** writes to **Files ▸ On My iPhone ▸ Anne's Folio**, and **Open** uses the system file picker. **Share** offers the share sheet. The iOS build uses the web versions of these functions; Android has a native plugin with more features (writing back to a file opened from another app, **Open with** from other apps, printing through the system service).
 
 ## Web
 

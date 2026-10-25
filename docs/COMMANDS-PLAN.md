@@ -1,4 +1,4 @@
-# QuillFolio command plan
+# Anne's Folio command plan
 
 Every feature is a command with an id (`area.name`), a label, a Material Symbols icon, a tab and a group. The ribbon, the Quick Access Bar, menus, shortcuts, macros and command search reference commands by id only. This file is the planned inventory, tab by tab; `npm run catalog` generates [COMMANDS.md](COMMANDS.md) from the live registry and lists which of these ids are implemented. A command is registered only when it works.
 
@@ -464,7 +464,7 @@ Macros (recorded command lists, editor, security), scripts report, structure exp
 
 Help, shortcuts, command reference, tour, releases, feedback, notices, about.
 
-- `help.about` — About QuillFolio
+- `help.about` — About Anne's Folio
 - `help.commandReference` — Command Reference
 - `help.feedback` — Report a Problem / Feedback
 - `help.help` — Help
@@ -476,5 +476,5 @@ Help, shortcuts, command reference, tour, releases, feedback, notices, about.
 
 ## Conventions
 
-- Ids shared with the other Quill apps keep their meaning: `file.save`, `file.open`, `file.openRepair`, `edit.undo`, `edit.redo`, `edit.find`, `review.spelling`, `view.cmdSearch`, `view.qatAddAll`, `view.qatPosition`, `view.qatLabels`, `view.qatShow`, `view.qatHide`, `view.collapseRibbon`, `view.touchMode`, `view.theme`, `file.customizeQat`, `file.customizeRibbon`, `file.customizeKeyboard`, `file.options`, `file.exportSettings`, `help.*`, `dev.*`.
+- Ids shared with the other Anne's Office apps keep their meaning: `file.save`, `file.open`, `file.openRepair`, `edit.undo`, `edit.redo`, `edit.find`, `review.spelling`, `view.cmdSearch`, `view.qatAddAll`, `view.qatPosition`, `view.qatLabels`, `view.qatShow`, `view.qatHide`, `view.collapseRibbon`, `view.touchMode`, `view.theme`, `file.customizeQat`, `file.customizeRibbon`, `file.customizeKeyboard`, `file.options`, `file.exportSettings`, `help.*`, `dev.*`.
 - Internal commands (`comment.toolDone`, `edit.pickAt`, `organize.moveTo`, `file.openDropped`, `dev.runMacro`) are hidden from choosers; the viewer and panes call them.

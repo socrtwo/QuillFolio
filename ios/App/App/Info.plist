@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>QuillFolio</string>
+	<string>Anne's Folio</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -43,7 +43,7 @@
       </array>
     </dict>
 	</dict>
-	<!-- File types QuillFolio can open ("Open in" / Share sheet / Files app). -->
+	<!-- File types Anne's Folio can open ("Open in" / Share sheet / Files app). -->
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -118,7 +118,7 @@
 		</dict>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>QuillFolio Review Package</string>
+			<string>Anne's Folio Review Package</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
@@ -219,14 +219,14 @@
 			</dict>
 		</dict>
 	</array>
-	<!-- QuillFolio's own type. -->
+	<!-- Anne's Folio's own type. -->
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
 			<string>io.github.socrtwo.quillfolio.qfr</string>
 			<key>UTTypeDescription</key>
-			<string>QuillFolio Review Package</string>
+			<string>Anne's Folio Review Package</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>

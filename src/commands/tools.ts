@@ -336,7 +336,7 @@ def([
     },
   },
   {
-    id: 'tools.toArchival', label: 'Prepare for Archiving', icon: 'inventory', tab: 'Tools', group: 'Convert', tip: 'Apply what QuillFolio can toward an archival PDF: remove encryption and scripts, write XMP with a title and language (no font embedding or color profiles yet)',
+    id: 'tools.toArchival', label: 'Prepare for Archiving', icon: 'inventory', tab: 'Tools', group: 'Convert', tip: 'Apply what Anne\'s Folio can toward an archival PDF: remove encryption and scripts, write XMP with a title and language (no font embedding or color profiles yet)',
     run: async (app) => {
       const issues = archivalCheck(app.doc);
       const m = readMetadata(app.doc);

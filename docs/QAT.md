@@ -4,7 +4,7 @@ The Quick Access Bar (QAT) is the row of always-visible buttons in the title bar
 
 ## The drop-down checklist
 
-The ▾ at the end of the bar lists the commands desktop programs have offered in their Quick Access drop-downs over the years, so that nothing a desktop PDF program puts there is missing. QuillFolio's list is the **union** of the suite's standard choices plus its own extras.
+The ▾ at the end of the bar lists the commands desktop programs have offered in their Quick Access drop-downs over the years, so that nothing a desktop PDF program puts there is missing. Anne's Folio's list is the **union** of the suite's standard choices plus its own extras.
 
 **Standard choices (`QAT_STANDARD`):**
 
@@ -24,7 +24,7 @@ The ▾ at the end of the bar lists the commands desktop programs have offered i
 | 12 | Touch/Mouse Mode | `view.touchMode` |
 | 13 | Open Recent File | `file.openRecent` |
 
-**QuillFolio extras (`QAT_EXTRAS`):** Select (`home.select`), Hand (`home.hand`), Highlight (`comment.highlight`), Note (`comment.note`), Rotate Right (`organize.rotateRight`), Save As (`file.saveAs`), Share (`file.share`), Export Pages as Images (`file.export.images`), Find (`edit.find`), Fill Mode (`forms.fillMode`), Search Commands (`view.cmdSearch`).
+**Anne's Folio extras (`QAT_EXTRAS`):** Select (`home.select`), Hand (`home.hand`), Highlight (`comment.highlight`), Note (`comment.note`), Rotate Right (`organize.rotateRight`), Save As (`file.saveAs`), Share (`file.share`), Export Pages as Images (`file.export.images`), Find (`edit.find`), Fill Mode (`forms.fillMode`), Search Commands (`view.cmdSearch`).
 
 **Default bar (`DEFAULT_QAT`):** Save, Undo, Redo, Select, Highlight, Search Commands.
 
@@ -63,4 +63,4 @@ Running Add All again changes nothing (it is idempotent); separators and other c
 
 ## More commands
 
-**More Commands…** (`file.customizeQat`) opens the customize dialog with every command in the app, by tab: add, remove, add a separator, move up or down, reset, and import or export the layout as JSON (the format is shared with the other Quill apps). Long-press or right-click any ribbon button to add it to the bar. Macros appear in the list as `macro:<name>`.
+**More Commands…** (`file.customizeQat`) opens the customize dialog with every command in the app, by tab: add, remove, add a separator, move up or down, reset, and import or export the layout as JSON (the format is shared with the other Anne's Office apps). Long-press or right-click any ribbon button to add it to the bar. Macros appear in the list as `macro:<name>`.

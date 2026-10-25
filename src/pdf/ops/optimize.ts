@@ -122,7 +122,7 @@ export function sanitize(doc: PdfDocument, o: SanitizeOptions): string[] {
   const cat = doc.catalog;
   if (o.metadata) {
     const info = doc.trailer.get('Info');
-    if (info instanceof Ref) doc.update(info, new Dict({ Producer: PdfString.fromText('QuillFolio') })); else doc.trailer.delete('Info');
+    if (info instanceof Ref) doc.update(info, new Dict({ Producer: PdfString.fromText('Anne\'s Folio') })); else doc.trailer.delete('Info');
     if (cat.has('Metadata')) { const m = cat.get('Metadata'); cat.delete('Metadata'); if (m instanceof Ref) doc.remove(m); }
     for (const p of doc.pages) if (p.dict.has('Metadata')) { p.dict.delete('Metadata'); if (p.ref) doc.touch(p.ref); }
     done.push('metadata');
@@ -178,7 +178,7 @@ export function archivalCheck(doc: PdfDocument): CheckItem[] {
   if (readLayers(doc).length) out.push({ level: 'warning', text: 'Optional content (layers) is present (forbidden in PDF/A-1).' });
   const transp = doc.pages.some((p) => { const res = p.resources; const eg = res ? doc.getDict(res, 'ExtGState') : null; return !!eg && eg.keys().some((k) => { const g = doc.getDict(eg, k); return !!g && ((doc.getNum(g, 'CA', 1) < 1) || doc.getNum(g, 'ca', 1) < 1 || (g.has('SMask') && !isName(g.get('SMask'), 'None'))); }); });
   if (transp) out.push({ level: 'warning', text: 'Transparency is used (forbidden in PDF/A-1, allowed from PDF/A-2).' });
-  if (!out.some((x) => x.level === 'error')) out.push({ level: 'info', text: 'No blocking problems found. QuillFolio checks structure only; color profiles and font program validity are not verified.' });
+  if (!out.some((x) => x.level === 'error')) out.push({ level: 'info', text: 'No blocking problems found. Anne\'s Folio checks structure only; color profiles and font program validity are not verified.' });
   return out;
 }
 
@@ -187,14 +187,14 @@ export function accessibilityCheck(doc: PdfDocument, pageTexts?: string[]): Chec
   const m = readMetadata(doc);
   if (!m.title) out.push({ level: 'error', text: 'No document title (screen readers announce the file name instead).', fix: 'Review ▸ Accessibility Fixer sets it' });
   if (!m.language) out.push({ level: 'error', text: 'No document language.', fix: 'Review ▸ Accessibility Fixer sets it' });
-  if (!m.tagged) out.push({ level: 'error', text: 'The document is not tagged: reading order and headings are not available to assistive technology. QuillFolio cannot add tags to existing content; create a tagged PDF from the source document.' });
+  if (!m.tagged) out.push({ level: 'error', text: 'The document is not tagged: reading order and headings are not available to assistive technology. Anne\'s Folio cannot add tags to existing content; create a tagged PDF from the source document.' });
   const images = listImages(doc);
   if (images.length && !m.tagged) out.push({ level: 'warning', text: `${images.length} image(s) have no alternative text (alt text needs a tagged structure).` });
   const vp = doc.getDict(doc.catalog, 'ViewerPreferences');
   if (!vp || doc.get(vp, 'DisplayDocTitle') !== true) out.push({ level: 'warning', text: 'Viewers show the file name rather than the title.', fix: 'Review ▸ Accessibility Fixer turns on Display Document Title' });
   if (pageTexts) pageTexts.forEach((t, i) => { if (!t.trim() && images.some((im) => im.page === i)) out.push({ level: 'warning', text: `Page ${i + 1} has no text (scanned?).`, page: i, fix: 'Scan/OCR ▸ Recognize Text' }); });
   for (const f of readFields(doc)) if (!f.tooltip && f.type !== 'button') out.push({ level: 'warning', text: `Form field "${f.name}" has no tooltip (its accessible name).`, fix: 'Forms ▸ Field Properties' });
-  if (!out.length) out.push({ level: 'info', text: 'No problems found in what QuillFolio can check.' });
+  if (!out.length) out.push({ level: 'info', text: 'No problems found in what Anne\'s Folio can check.' });
   return out;
 }
 
