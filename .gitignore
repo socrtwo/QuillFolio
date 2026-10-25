@@ -148,7 +148,7 @@ vite.config.ts.timestamp-*
 # Turbo Repo
 .turbo
 
-# QuillFolio
+# Anne's Folio
 dist/
 android/app/build/
 android/build/

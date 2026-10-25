@@ -1,6 +1,6 @@
-# AI ensembles: several AI providers on one request (Quill suite)
+# AI ensembles: several AI providers on one request (Anne's Office suite)
 
-All four apps (QuillPen, QuillGrid, QuillPost, QuillFolio) implement this identically. Wording in
+All four apps (Anne's Pen, Anne's Grid, Anne's Post, Anne's Folio) implement this identically. Wording in
 quotes is the exact interface text.
 
 ## 1. Settings

@@ -40,7 +40,7 @@ try {
     const { PdfDocument } = await window.__qfEngine();
     const build = await window.__qfBuild();
     const d = PdfDocument.create();
-    build.addTextPages(d, '# Smoke Test\n\nHello QuillFolio. This is page one.\n\n## Second heading\n\nMore text.', { title: 'Smoke' });
+    build.addTextPages(d, '# Smoke Test\n\nHello Anne\'s Folio. This is page one.\n\n## Second heading\n\nMore text.', { title: 'Smoke' });
     build.addBlankPage(d);
     build.addBlankPage(d);
     const bytes = d.save({ incremental: false });
@@ -54,7 +54,7 @@ try {
   check('opened name', built.name, 'smoke.pdf');
   await p.waitForSelector('.qf-page[data-i="2"]');
   const text = await p.evaluate(() => qf.viewer.pageText(0));
-  check('text layer', /Hello QuillFolio/.test(text), true);
+  check('text layer', /Hello Anne's Folio/.test(text), true);
 
   // Annotate: a note, a highlight and a text field through the engine commands.
   await p.evaluate(() => { void qf.exec('comment.toolDone', { tool: 'note', page: 0, start: [100, 700], end: [100, 700], rect: [100, 700, 100, 700], pts: [[100, 700]], click: true, opts: {} }); });
@@ -106,7 +106,7 @@ try {
   check('round trips', round, [['incremental', 3, 90, 'filled by smoke', 2, true], ['rewrite', 3, 90, 'filled by smoke', 2, true]]);
 
   // Search finds the text; organize grid renders thumbnails; views switch.
-  const hits = await p.evaluate(() => qf.viewer.search('QuillFolio'));
+  const hits = await p.evaluate(() => qf.viewer.search('Anne\'s Folio'));
   check('search', hits.map((h) => h.page), [0]);
   await p.evaluate(() => qf.exec('view.organize'));
   await p.waitForSelector('.qf-gthumb');

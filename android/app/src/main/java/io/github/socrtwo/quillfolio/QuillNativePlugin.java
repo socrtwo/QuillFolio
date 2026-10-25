@@ -45,7 +45,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Native file plumbing for QuillFolio on Android.
+ * Native file plumbing for Anne's Folio on Android.
  *
  * JS contract (all binary payloads are base64 strings without line breaks):
  * <ul>
@@ -62,7 +62,7 @@ import java.util.concurrent.Executors;
  *   <li>readClipboard() -> {text} / writeClipboard({text, sensitive})</li>
  *   <li>startLoopback({timeoutMs, successHtml, path}) -> {port}; event "oauthCallback" {url} (requests for path only); stopLoopback()</li>
  *   <li>openInApp({packageName, name, mime, data}) -> {opened: true} | {opened: false, reason: "not-installed"}:
- *       hands a document to a sibling Quill app (QuillPen, QuillPost, QuillFolio) with ACTION_VIEW</li>
+ *       hands a document to a sibling Anne's Office app (Anne's Pen, Anne's Post, Anne's Folio) with ACTION_VIEW</li>
  * </ul>
  */
 @CapacitorPlugin(name = "QuillNative")
@@ -181,7 +181,7 @@ public class QuillNativePlugin extends Plugin {
                 if ((text == null || text.isEmpty()) && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     cm.clearPrimaryClip();
                 } else {
-                    ClipData clip = ClipData.newPlainText("QuillFolio", text);
+                    ClipData clip = ClipData.newPlainText("Anne's Folio", text);
                     if (sensitive && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                         PersistableBundle extras = new PersistableBundle();
                         extras.putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true);
@@ -372,7 +372,7 @@ public class QuillNativePlugin extends Plugin {
 
     @PluginMethod
     public void print(PluginCall call) {
-        final String jobName = call.getString("jobName", "QuillFolio document");
+        final String jobName = call.getString("jobName", "Anne's Folio document");
         final Activity activity = getActivity();
         if (activity == null) {
             call.reject("Printing is not available right now");
@@ -459,7 +459,7 @@ public class QuillNativePlugin extends Plugin {
         final String mime = call.getString("mime", "application/octet-stream");
         final String data = call.getString("data");
         if (!SIBLING_APPS.contains(pkg)) {
-            call.reject("openInApp only opens the Quill apps");
+            call.reject("openInApp only opens the Anne's Office apps");
             return;
         }
         if (data == null) {

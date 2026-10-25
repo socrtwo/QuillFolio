@@ -82,14 +82,14 @@ strings -n 6 damaged.pdf | less</code></pre>
   android: ['Android', `
     <h3>1. Version history in the app that holds the file</h3><p>Google Drive, OneDrive and Dropbox keep versions of each file; look for <b>Version history</b> or <b>Manage versions</b>.</p>
     <h3>2. Trash and recently deleted</h3><p>Drive &gt; <b>Trash</b>, OneDrive &gt; <b>Recycle bin</b>, Files &gt; <b>Trash</b> keep deleted files for about 30 days.</p>
-    <h3>3. QuillFolio's own copies</h3><p>Open &gt; Recent keeps a cached copy of each file you opened here, and unsaved drafts are kept automatically.</p>
+    <h3>3. Anne's Folio's own copies</h3><p>Open &gt; Recent keeps a cached copy of each file you opened here, and unsaved drafts are kept automatically.</p>
     <h3>4. Download again</h3><p>A PDF that stopped downloading is truncated: delete it and download it again.</p>`],
   ios: ['iOS / iPadOS', `
     <h3>1. Files &gt; Recently Deleted</h3><p>Files keeps deleted items for about 30 days; iCloud Drive keeps versions of some documents.</p>
     <h3>2. The app that created the PDF</h3><p>Export the PDF again from the original document (Pages, Numbers, Keynote, Mail attachments).</p>
-    <h3>3. QuillFolio's own copies</h3><p>Open &gt; Recent keeps a cached copy of each file opened here; drafts are kept automatically.</p>`],
+    <h3>3. Anne's Folio's own copies</h3><p>Open &gt; Recent keeps a cached copy of each file opened here; drafts are kept automatically.</p>`],
   tools: ['More S2 recovery tools', `
-    <p>Free tools by the author of QuillFolio's repair engine, each specialized for one kind of damage:</p>
+    <p>Free tools by the author of Anne's Folio's repair engine, each specialized for one kind of damage:</p>
     <ul>
       <li>${link('https://socrtwo.github.io/Universal-File-Repair-Tool/', 'Universal File Repair Tool')} · ${link('https://socrtwo.github.io/Immortal-Zip/', 'Immortal Zip')} · ${link('https://socrtwo.github.io/xmltrncatorfixr-SF/app/', 'XML Truncator-Fixer')}</li>
       <li>${link('https://socrtwo.github.io/wordrecovery-SF/', 'Word Recovery')} · ${link('https://socrtwo.github.io/savvyoffice-SF/', 'Savvy Repair for Microsoft Office')} · ${link('https://socrtwo.github.io/file-fixer-bot/', 'File Fixer Bot')}</li>
@@ -115,7 +115,7 @@ export async function showManualRecovery(actions: ReportActions = {}): Promise<v
   const tabs = h('div', { class: 'ql-seg' }, Object.entries(MANUAL).map(([k, [label]]) => h('button', { class: 'ql-seg-btn', 'data-k': k, onclick: () => show(k) }, label)));
   const show = (k: string) => { pane.innerHTML = MANUAL[k][1]; tabs.querySelectorAll('button').forEach((b) => b.classList.toggle('ql-on', b.getAttribute('data-k') === k)); };
   pane.addEventListener('click', (e) => { const a = (e.target as HTMLElement).closest('a[data-external]') as HTMLAnchorElement | null; if (a) { e.preventDefault(); openExternal(a.href); } });
-  const intro = h('p', { class: 'ql-help' }, 'QuillFolio can try every repair method on a damaged PDF, or on any file that may hold PDF data: pick it with "Repair a file…". The steps below find other copies of the file.');
+  const intro = h('p', { class: 'ql-help' }, 'Anne\'s Folio can try every repair method on a damaged PDF, or on any file that may hold PDF data: pick it with "Repair a file…". The steps below find other copies of the file.');
   content.append(intro, tabs, pane);
   show(guess);
   await openDialog({ title: 'Manual Recovery Options', content, wide: true, ok: 'Close', cancel: false, buttons: [{ label: 'Repair a file…', primary: true, onClick: (_v, ctl) => { ctl.close(null); void recoverPickedFile(actions).catch((e) => toast(`Repair failed: ${e?.message || e}`)); } }] });

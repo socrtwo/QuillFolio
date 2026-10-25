@@ -1,5 +1,5 @@
 /**
- * QuillFolio application core: document tabs, command execution, undo/redo of engine edits,
+ * Anne's Folio application core: document tabs, command execution, undo/redo of engine edits,
  * macro recording and draft autosave. Each tab holds one PdfDocument (the engine's object graph,
  * the document of record) and the bytes the viewer renders from.
  */
@@ -191,7 +191,7 @@ export class App {
     this.ui.tabsChanged();
     tab.ui.layout();
     this.refresh();
-    document.title = `${tab.displayName}${tab.dirty ? ' •' : ''} – QuillFolio`;
+    document.title = `${tab.displayName}${tab.dirty ? ' •' : ''} – Anne's Folio`;
   }
 
   closeTab(tab: DocTab): void {
@@ -207,7 +207,7 @@ export class App {
 
   /** Called after every edit, undo and redo. */
   docChanged(tab: DocTab): void {
-    if (!tab.dirty) { tab.dirty = true; this.ui.tabsChanged(); document.title = `${tab.displayName} • – QuillFolio`; }
+    if (!tab.dirty) { tab.dirty = true; this.ui.tabsChanged(); document.title = `${tab.displayName} • – Anne's Folio`; }
     this.scheduleAutosave();
     void tab.ui.reload();
     this.refresh();

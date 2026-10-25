@@ -17,7 +17,7 @@ def([
   {
     id: 'help.help', label: 'Help', icon: 'help', tab: 'Help', group: 'Help', keys: ['F1'], edits: false, noRecord: true,
     run: async () => {
-      await openDialog({ title: 'QuillFolio Help', wide: true, ok: 'Close', cancel: false, fields: [{ key: 'i', type: 'info', html: [
+      await openDialog({ title: 'Anne\'s Folio Help', wide: true, ok: 'Close', cancel: false, fields: [{ key: 'i', type: 'info', html: [
         '<p><b>Every feature is a command.</b> Search for any of them with Alt+Q (the magnifier in the title bar), put them on the Quick Access Bar, your own tabs or keyboard shortcuts, or record them in macros.</p>',
         '<p><b>Reading:</b> scroll, pinch or Ctrl+wheel to zoom, F4 for thumbnails, Ctrl+F to search. Select text and use the Selected Text tab (or right-click) to highlight, redact, look up or read it aloud.</p>',
         '<p><b>Commenting:</b> the Comment tab has notes, text boxes, drawings, stamps, attachments and measurements. Double-click an annotation for its properties; drag it to move; the Comments pane lists them all.</p>',
@@ -44,9 +44,9 @@ def([
     },
   },
   {
-    id: 'help.about', label: 'About QuillFolio', icon: 'info', tab: 'Help', group: 'Help', edits: false, noRecord: true,
+    id: 'help.about', label: 'About Anne\'s Folio', icon: 'info', tab: 'Help', group: 'Help', edits: false, noRecord: true,
     run: async () => {
-      await openDialog({ title: 'About QuillFolio', ok: 'Close', cancel: false, fields: [{ key: 'i', type: 'info', html: `<p><b>QuillFolio ${VERSION}</b> — an original, open-source PDF app for viewing, editing, forms, signing, OCR and repair. Part of the Quill suite (QuillPen, QuillGrid, QuillPost, QuillStage, QuillLoom, QuillPress).</p><p>${commandCount()} commands, every one placeable on the Quick Access Bar, a tab, a shortcut or a macro.</p><p>Rendering by pdf.js (Apache 2.0); text recognition by tesseract.js (Apache 2.0). QuillFolio's own PDF engine reads, repairs, edits and writes the files.</p><p>MIT License. Copyright © 2026 Paul D Pruitt. Not affiliated with Adobe, Foxit, Microsoft, Apple or Google; product names are used only to describe compatibility.</p><p><a href="${REPO}" target="_blank" rel="noopener">${REPO}</a></p>` }] });
+      await openDialog({ title: 'About Anne\'s Folio', ok: 'Close', cancel: false, fields: [{ key: 'i', type: 'info', html: `<p><b>Anne's Folio ${VERSION}</b> — an original, open-source PDF app for viewing, editing, forms, signing, OCR and repair. Part of the Anne's Office suite (Anne's Pen, Anne's Grid, Anne's Post, Anne's Stage, Anne's Loom, Anne's Press).</p><p>${commandCount()} commands, every one placeable on the Quick Access Bar, a tab, a shortcut or a macro.</p><p>Rendering by pdf.js (Apache 2.0); text recognition by tesseract.js (Apache 2.0). Anne's Folio's own PDF engine reads, repairs, edits and writes the files.</p><p>MIT License. Copyright © 2026 Paul D Pruitt. Not affiliated with Adobe, Foxit, Microsoft, Apple or Google; product names are used only to describe compatibility.</p><p><a href="${REPO}" target="_blank" rel="noopener">${REPO}</a></p>` }] });
     },
   },
 ]);

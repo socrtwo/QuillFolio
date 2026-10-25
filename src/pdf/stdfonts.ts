@@ -1,5 +1,5 @@
 /**
- * Metrics of the standard 14 fonts QuillFolio writes with (Helvetica, Times, Courier families), from
+ * Metrics of the standard 14 fonts Anne's Folio writes with (Helvetica, Times, Courier families), from
  * the public AFM files: glyph widths in 1/1000 em for ASCII 32–126, plus WinAnsi encoding helpers.
  */
 

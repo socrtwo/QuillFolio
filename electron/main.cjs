@@ -1,4 +1,4 @@
-// QuillFolio desktop app (Windows, macOS, Linux, Raspberry Pi OS): Electron main process.
+// Anne's Folio desktop app (Windows, macOS, Linux, Raspberry Pi OS): Electron main process.
 //
 // The web build (dist/) is served from the privileged app:// scheme so module workers, fetch and
 // IndexedDB behave as on the web. The renderer is sandboxed with context isolation and no Node;
@@ -17,7 +17,7 @@ const DIST = path.join(__dirname, '..', 'dist');
 const SCHEME = 'app';
 const ORIGIN = `${SCHEME}://quillfolio`;
 const OPENABLE = ['pdf', 'fdf', 'xfdf', 'qfr', 'png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'tif', 'tiff', 'svg', 'txt', 'md', 'markdown', 'html', 'htm', 'json', 'zip'];
-/** Documents, slides, sheets and mail the app can hand to a sibling Quill app (never programs or scripts). */
+/** Documents, slides, sheets and mail the app can hand to a sibling Anne's Office app (never programs or scripts). */
 const DOCUMENTS = ['docx', 'docm', 'dotx', 'doc', 'odt', 'fodt', 'rtf', 'pptx', 'odp', 'xlsx', 'ods', 'csv', 'eml', 'html', 'htm'];
 
 protocol.registerSchemesAsPrivileged([{ scheme: SCHEME, privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true, stream: true } }]);
@@ -49,7 +49,7 @@ function grant(p) {
 function grantedPath(uri) {
   if (typeof uri !== 'string' || !uri.startsWith('file:')) throw new Error('Not a file address');
   const p = path.resolve(fileURLToPath(uri));
-  if (!grants.has(p)) throw new Error('QuillFolio has no permission for this file; open it again.');
+  if (!grants.has(p)) throw new Error('Anne\'s Folio has no permission for this file; open it again.');
   return p;
 }
 const MIME = {
@@ -122,7 +122,7 @@ function registerIpc() {
   handle('openDocument', async () => {
     const r = await dialog.showOpenDialog(win, {
       properties: ['openFile'],
-      filters: [{ name: 'PDF and files QuillFolio can turn into PDF', extensions: OPENABLE }, { name: 'All files', extensions: ['*'] }],
+      filters: [{ name: 'PDF and files Anne\'s Folio can turn into PDF', extensions: OPENABLE }, { name: 'All files', extensions: ['*'] }],
     });
     if (r.canceled || !r.filePaths[0]) return { canceled: true };
     grant(r.filePaths[0]);
@@ -187,7 +187,7 @@ function registerIpc() {
   });
   handle('stopLoopback', async () => stopLoop());
   handle('openExternal', async ({ url }) => { if (safeUrl(url)) await shell.openExternal(url); });
-  // Hand a document to the program registered for its type (QuillPen, QuillPost or QuillFolio when installed).
+  // Hand a document to the program registered for its type (Anne's Pen, Anne's Post or Anne's Folio when installed).
   handle('openWith', async ({ name, data }) => {
     const base = path.basename(String(name || 'document')).replace(/[\\/:*?"<>|]/g, '_');
     const ext = path.extname(base).slice(1).toLowerCase();
@@ -257,7 +257,7 @@ function createWindow() {
     height: 860,
     minWidth: 360,
     minHeight: 480,
-    title: 'QuillFolio',
+    title: 'Anne\'s Folio',
     backgroundColor: '#ffffff',
     autoHideMenuBar: process.platform !== 'darwin',
     icon: path.join(__dirname, 'icon.png'),
@@ -267,7 +267,7 @@ function createWindow() {
       sandbox: true,
       nodeIntegration: false,
       webSecurity: true,
-      spellcheck: false, // QuillFolio has its own spelling checker
+      spellcheck: false, // Anne's Folio has its own spelling checker
     },
   });
   // Links open in the system browser; the window never navigates away from the app and the page never
@@ -279,7 +279,7 @@ function createWindow() {
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith(ORIGIN)) { e.preventDefault(); if (safeUrl(url)) void shell.openExternal(url); } });
   // The page asks before unloading with unsaved documents: confirm here, as the browser would.
   win.webContents.on('will-prevent-unload', (e) => {
-    const choice = dialog.showMessageBoxSync(win, { type: 'question', buttons: ['Close without saving', 'Cancel'], defaultId: 1, cancelId: 1, title: 'Unsaved changes', message: 'Some documents have unsaved changes. Close QuillFolio anyway?' });
+    const choice = dialog.showMessageBoxSync(win, { type: 'question', buttons: ['Close without saving', 'Cancel'], defaultId: 1, cancelId: 1, title: 'Unsaved changes', message: 'Some documents have unsaved changes. Close Anne\'s Folio anyway?' });
     if (choice === 0) e.preventDefault();
   });
   // A reload or navigation drops the page's listeners until it registers them again.

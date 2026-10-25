@@ -1,6 +1,6 @@
-# Contributing to QuillFolio
+# Contributing to Anne's Folio
 
-Thanks for your interest. QuillFolio is an original, clean-room PDF app; the rules below keep it that way and keep the suite consistent.
+Thanks for your interest. Anne's Folio is an original, clean-room PDF app; the rules below keep it that way and keep the suite consistent.
 
 ## What helps most
 
@@ -14,7 +14,7 @@ Thanks for your interest. QuillFolio is an original, clean-room PDF app; the rul
 - **No missing commands.** Every feature is a `def()` command in `src/commands/*.ts` with an id, a label, a Material Symbols icon, a tab and a group. Tabs, the Quick Access Bar, menus, shortcuts, macros and search use ids only. Register a command only when it works; planned ids go in [docs/COMMANDS-PLAN.md](docs/COMMANDS-PLAN.md).
 - **The engine is the document of record.** Changes go through `src/pdf` (objects, writer, ops); pdf.js is used for drawing and text extraction only. Every edit must survive `doc.save({ incremental: true })` and `doc.save({ incremental: false })`; add a unit test that round-trips it.
 - **American English** in the interface, comments and docs. **MIT** license; only permissive dependencies (never GPL/LGPL). Do not put model names or AI attribution in files.
-- Keep the shared shell files (`src/ui/*`, `src/ai/*`, `src/proof/*`, `src/platform/*`, `scripts/*`) as close to QuillStage's as possible so fixes port across the suite.
+- Keep the shared shell files (`src/ui/*`, `src/ai/*`, `src/proof/*`, `src/platform/*`, `scripts/*`) as close to Anne's Stage's as possible so fixes port across the suite.
 
 ## Working on the code
 

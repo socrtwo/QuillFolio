@@ -35,7 +35,7 @@ export function toJsonish(doc: App['doc'], o: PdfObj, depth: number, seen = new 
   return o as unknown;
 }
 
-/** Counts and lists the script/action entries QuillFolio never runs. */
+/** Counts and lists the script/action entries Anne's Folio never runs. */
 function scriptsReport(app: App): { text: string; count: number }[] {
   const doc = app.doc;
   const out: { text: string; count: number }[] = [];
@@ -113,7 +113,7 @@ def([
       const r = await openDialog({ title: m ? `Edit Macro: ${m.name}` : 'New Macro', wide: true, fields: [
         { key: 'name', label: 'Name', type: 'text', value: m?.name || `Macro${ms.length + 1}` },
         { key: 'desc', label: 'Description', type: 'text', value: m?.description || '' },
-        { key: 'steps', label: 'Steps', type: 'textarea', rows: 14, value: text, help: 'Find command ids in Help ▸ Command Reference or the Customize dialogs. Macros run QuillFolio commands only; they cannot reach files, the network or other apps.' },
+        { key: 'steps', label: 'Steps', type: 'textarea', rows: 14, value: text, help: 'Find command ids in Help ▸ Command Reference or the Customize dialogs. Macros run Anne\'s Folio commands only; they cannot reach files, the network or other apps.' },
       ], validate: (v) => {
         for (const [i, line] of String(v.steps).split('\n').entries()) {
           const t = line.trim(); if (!t || t.startsWith('#')) continue;
@@ -132,7 +132,7 @@ def([
   },
   {
     id: 'dev.macroSecurity', label: 'Macro Security', icon: 'admin_panel_settings', tab: 'Developer', group: 'Code', noRecord: true, edits: false,
-    run: async () => { await openDialog({ title: 'Macro Security', ok: 'Close', cancel: false, fields: [{ key: 'i', type: 'info', html: '<p><b>QuillFolio macros are lists of QuillFolio commands.</b> They can do only what you could do with the ribbon: mark up, organize pages, export. They cannot run code, read or write files on their own, or use the network.</p><p><b>JavaScript inside PDF files</b> (document scripts, field calculations, link actions) is <b>never run</b> by QuillFolio. Developer ▸ Scripts in This Document lists what is there; Protect ▸ Remove JavaScript strips it.</p>' }] }); },
+    run: async () => { await openDialog({ title: 'Macro Security', ok: 'Close', cancel: false, fields: [{ key: 'i', type: 'info', html: '<p><b>Anne\'s Folio macros are lists of Anne\'s Folio commands.</b> They can do only what you could do with the ribbon: mark up, organize pages, export. They cannot run code, read or write files on their own, or use the network.</p><p><b>JavaScript inside PDF files</b> (document scripts, field calculations, link actions) is <b>never run</b> by Anne\'s Folio. Developer ▸ Scripts in This Document lists what is there; Protect ▸ Remove JavaScript strips it.</p>' }] }); },
   },
   {
     id: 'dev.javaScriptInfo', label: 'Scripts in This Document', icon: 'code_off', tab: 'Developer', group: 'Code', noRecord: true, edits: false,
@@ -160,7 +160,7 @@ def([
       const walk = (o: PdfObj | undefined, depth: number) => { if (depth > 40 || n > 20000) return; const x = d.resolve(o); if (Array.isArray(x)) { for (const k of x) walk(k, depth + 1); return; } if (!(x instanceof Dict)) return; const s = d.getName(x, 'S'); if (s) { counts.set(s, (counts.get(s) || 0) + 1); n++; } walk(x.get('K'), depth + 1); };
       if (root) walk(root.get('K'), 0);
       const rows = [...counts.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k}: ${v}`);
-      await openDialog({ title: 'Tag Structure', ok: 'Close', cancel: false, content: h('div', null, h('p', null, root ? `Tagged: ${mi && d.get(mi, 'Marked') === true ? 'yes (MarkInfo/Marked)' : 'structure tree present, MarkInfo not set'}; ${n} structure element(s).` : 'The document is not tagged (no StructTreeRoot). QuillFolio cannot add tags to existing content.'), rows.length ? h('pre', { class: 'ql-notices' }, rows.join('\n')) : null, root && root.has('RoleMap') ? h('p', { class: 'ql-help' }, `Role map: ${esc(Object.entries(toJsonish(d, root.get('RoleMap')!, 1) as any).map(([k, v]) => `${k}→${v}`).join(', '))}`) : null) });
+      await openDialog({ title: 'Tag Structure', ok: 'Close', cancel: false, content: h('div', null, h('p', null, root ? `Tagged: ${mi && d.get(mi, 'Marked') === true ? 'yes (MarkInfo/Marked)' : 'structure tree present, MarkInfo not set'}; ${n} structure element(s).` : 'The document is not tagged (no StructTreeRoot). Anne\'s Folio cannot add tags to existing content.'), rows.length ? h('pre', { class: 'ql-notices' }, rows.join('\n')) : null, root && root.has('RoleMap') ? h('p', { class: 'ql-help' }, `Role map: ${esc(Object.entries(toJsonish(d, root.get('RoleMap')!, 1) as any).map(([k, v]) => `${k}→${v}`).join(', '))}`) : null) });
     },
   },
   {

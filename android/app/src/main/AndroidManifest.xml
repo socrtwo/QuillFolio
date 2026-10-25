@@ -24,7 +24,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- "Open with QuillFolio" for PDFs (and the files it turns into PDFs) identified by MIME type
+            <!-- "Open with Anne's Folio" for PDFs (and the files it turns into PDFs) identified by MIME type
                  (a mimeType-only <data> matches content: and file: URIs). -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
@@ -203,7 +203,7 @@
         </provider>
     </application>
 
-    <!-- The Quill apps this one can hand documents to (Android 11+ package visibility). -->
+    <!-- The Anne's Office apps this one can hand documents to (Android 11+ package visibility). -->
     <queries>
         <package android:name="io.github.socrtwo.quillpen" />
         <package android:name="io.github.socrtwo.quillpost" />

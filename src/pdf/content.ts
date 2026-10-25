@@ -106,7 +106,7 @@ export interface FontInfo {
   toUnicode: Map<number, string>;
   /** Two-byte codes (Type0 with Identity or a 2-byte CMap). */
   twoByte: boolean;
-  /** Can QuillFolio re-encode text for this font? (simple font with a known Latin encoding) */
+  /** Can Anne's Folio re-encode text for this font? (simple font with a known Latin encoding) */
   editable: boolean;
   /** Unicode → code for editable fonts. */
   fromUnicode: Map<string, number>;

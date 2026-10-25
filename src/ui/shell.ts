@@ -612,11 +612,11 @@ export class Shell {
 
   async tour(): Promise<void> {
     const steps = [
-      ['Everything is a command', 'Every feature of QuillFolio is a command you can find with the search button (or Alt+Q), place on the Quick Access Bar, put on your own tab, assign a key, or record in a macro.'],
+      ['Everything is a command', 'Every feature of Anne\'s Folio is a command you can find with the search button (or Alt+Q), place on the Quick Access Bar, put on your own tab, assign a key, or record in a macro.'],
       ['Quick Access Bar', 'Tap ▾ at the end of the Quick Access Bar to add common commands, or choose More Commands… to pick from the full library. Long-press or right-click any ribbon button to add it. You can move the bar below the ribbon or to the bottom, near the keyboard.'],
       ['Reading and marking up', 'Select text and use the Selected Text tab (or right-click) to highlight, underline, redact or look it up. The Comment tab has notes, text boxes, drawings, stamps and measurements. Double-click an annotation for its properties.'],
       ['Pages and forms', 'Organize Pages shows every page as a thumbnail you can drag, rotate, delete, extract or merge. The Forms tab fills existing fields and adds new ones; Fill & Sign puts your signature on any page.'],
-      ['Files', 'Open any PDF, even a damaged one: QuillFolio rebuilds what it can and shows a repair report. Images, text and Markdown files become PDFs. Save appends your changes so the original bytes stay intact; File ▸ Save As ▸ Rewrite makes a clean, smaller file.'],
+      ['Files', 'Open any PDF, even a damaged one: Anne\'s Folio rebuilds what it can and shows a repair report. Images, text and Markdown files become PDFs. Save appends your changes so the original bytes stay intact; File ▸ Save As ▸ Rewrite makes a clean, smaller file.'],
     ];
     for (let i = 0; i < steps.length; i++) {
       const r = await openDialog({ title: `${steps[i][0]} (${i + 1}/${steps.length})`, content: h('p', { class: 'ql-msg' }, steps[i][1]), ok: i === steps.length - 1 ? 'Start' : 'Next', cancel: 'Skip tour' });

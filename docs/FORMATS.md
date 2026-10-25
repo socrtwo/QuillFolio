@@ -13,7 +13,7 @@ Detection is by content: the sniffing in `src/io/index.ts` looks at the bytes fi
 | PNG, JPEG, GIF, WebP, BMP, TIFF, SVG | A new PDF with one page sized to the picture (JPEG embedded as is) |
 | TXT, Markdown, HTML | A new PDF typeset with Helvetica (headings, paragraphs, lists) |
 | ZIP of PDFs | The PDFs combined into one document, in name order |
-| QuillFolio review package (.qfr) | The PDF with the package's XFDF comments applied |
+| Anne's Folio review package (.qfr) | The PDF with the package's XFDF comments applied |
 | PDF portfolio | The cover document; the embedded files are in the Attachments pane |
 
 ## Saving
@@ -32,5 +32,5 @@ Detection is by content: the sniffing in `src/io/index.ts` looks at the bytes fi
 
 - Image streams compressed with JBIG2 or JPEG 2000 are displayed (pdf.js decodes them) but cannot be extracted, recompressed or redacted pixel by pixel by the engine; redaction removes the whole image when it overlaps a mark.
 - Text in CID (composite) fonts is read for extraction and search but edited by overlay only.
-- Fonts are not embedded by QuillFolio; new text uses the standard 14 fonts.
+- Fonts are not embedded by Anne's Folio; new text uses the standard 14 fonts.
 - XFA form content is not rendered.

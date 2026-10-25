@@ -1,6 +1,6 @@
 # Architecture plan
 
-The intended shape of QuillFolio. [ARCHITECTURE.md](ARCHITECTURE.md) describes what is built.
+The intended shape of Anne's Folio. [ARCHITECTURE.md](ARCHITECTURE.md) describes what is built.
 
 - **Stack:** TypeScript, Vite, vitest, Capacitor (Android, iOS), Electron (Windows, macOS, Linux); the same CI and release workflows as the sister apps.
 - **Shell (shared with the suite):** command registry, ribbon tabs and groups built from command ids, Quick Access Bar, customizable tabs and keyboard, command search, macro recorder, backstage, panes, dialogs, AI wizard and providers, spelling worker and dictionaries, recovery helpers, platform layer.

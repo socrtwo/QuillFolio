@@ -1,4 +1,4 @@
-/** Builds docs/COMMANDS.md from the live command registry (every command QuillFolio defines). */
+/** Builds docs/COMMANDS.md from the live command registry (every command Anne's Folio defines). */
 import { readFileSync } from 'node:fs';
 import '../src/commands';
 import { allCommands, getCommand } from '../src/commands/registry';
@@ -17,8 +17,8 @@ export function catalog(): string {
   const planned = plannedIds(readFileSync('docs/COMMANDS-PLAN.md', 'utf8'));
   const missing = planned.filter((id) => !getCommand(id));
   const lines: string[] = [];
-  lines.push('# QuillFolio Command Reference', '');
-  lines.push(`QuillFolio ships **${cmds.length} commands**. Every one can be placed on the Quick Access Bar, added to a custom tab, bound to a keyboard shortcut, recorded in a macro, or found with command search (Alt+Q).`, '');
+  lines.push('# Anne\'s Folio Command Reference', '');
+  lines.push(`Anne's Folio ships **${cmds.length} commands**. Every one can be placed on the Quick Access Bar, added to a custom tab, bound to a keyboard shortcut, recorded in a macro, or found with command search (Alt+Q).`, '');
   lines.push(`${cmds.filter((c) => !inTabs.has(c.id)).length} of them are "Commands Not in the Tabs" — reachable through the Quick Access Bar chooser, Customize Tabs, the command search, or menus — so nothing the app can do is hidden.`, '');
   lines.push(`Of the ${planned.length} command ids named in [COMMANDS-PLAN.md](COMMANDS-PLAN.md), ${planned.length - missing.length} are implemented and ${missing.length} are not yet; they are listed at the end of this file.`, '');
   lines.push('This file is generated from the source by `npm run catalog`; a unit test fails when it is out of date.', '');

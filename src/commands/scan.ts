@@ -94,7 +94,7 @@ export function writeTextLayer(doc: PdfDocument, p: PageInfo, words: OcrWord[], 
   if (p.ref) doc.update(p.ref, p.dict);
 }
 
-/** Removes an earlier OCR layer (the last invisible text block QuillFolio wrote). */
+/** Removes an earlier OCR layer (the last invisible text block Anne's Folio wrote). */
 function stripOcrLayer(doc: PdfDocument, p: PageInfo): void {
   const ops = parseContent(doc.pageContent(p));
   // Drop every BT…ET block whose first Tr is 3.

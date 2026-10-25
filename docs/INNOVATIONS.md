@@ -1,10 +1,10 @@
 # Innovations survey
 
-What PDF software, past and present, has offered, and what QuillFolio adopts from each. Ideas are described generically; product names identify where an idea came from (nominative use; see [LEGAL.md](LEGAL.md)). Command ids in backticks are implemented; the rest are listed in [ROADMAP.md](ROADMAP.md).
+What PDF software, past and present, has offered, and what Anne's Folio adopts from each. Ideas are described generically; product names identify where an idea came from (nominative use; see [LEGAL.md](LEGAL.md)). Command ids in backticks are implemented; the rest are listed in [ROADMAP.md](ROADMAP.md).
 
 ## The field, roughly in order of appearance
 
-| Origin | What it contributed | QuillFolio |
+| Origin | What it contributed | Anne's Folio |
 |---|---|---|
 | **PostScript viewers and Ghostscript** (1980s–) | Interpreting page descriptions in software; command-line conversion and rewriting (`pdfwrite`), repair by re-interpretation | A full rewrite in memory that renumbers and recompresses (`tools.rewrite`, `tools.optimize`); batch processing of many files (`tools.batch`) |
 | **The first PDF readers** (1993–) | Thumbnails, bookmarks, article threads, links, fit-page and fit-width, page labels, the invisible text layer over scanned pages | Thumbnail rail and grid (`view.thumbnails`, `view.organize`), bookmarks pane (`view.bookmarks`), page labels (`organize.pageLabels`), fit modes, OCR text layer (`scan.recognize`) |
@@ -17,7 +17,7 @@ What PDF software, past and present, has offered, and what QuillFolio adopts fro
 | **Office suites' PDF export** | Tagged PDF, headings as bookmarks, document properties | Bookmarks from headings by font size (`tools.bookmarksFromHeadings`), properties and XMP (`file.properties`, `tools.editXmp`) |
 | **Document-cloud services** | Share links, request signatures, review sessions, version history | Request signatures by email draft (`sign.requestSignatures`), version history and snapshots (`file.versions`, `file.snapshot`), share sheet (`file.share`) |
 
-## QuillFolio's own ideas
+## Anne's Folio's own ideas
 
 - **Repair report with a diff.** Every damaged file gets a method-by-method report (what succeeded, what was partial, what failed) and a list of what was rebuilt and what was lost, with the recovered document opened as a new file (`file.openRepair`, `file.recoveryReport`). Lineage: the author's Immortal Zip, XML Truncator-Fixer and Word Recovery tools.
 - **Structure inspector with raw objects.** A tree of the trailer, catalog, pages and resources with every object viewable as PDF syntax and decoded streams (`view.inspector`, `dev.rawObject`, `dev.exportStructure`).
@@ -33,6 +33,6 @@ What PDF software, past and present, has offered, and what QuillFolio adopts fro
 
 - **Certificate signing and timestamps.** Needs a PKCS#7/CMS implementation and key management on every platform; on the roadmap.
 - **Linearization.** Useful only for byte-range streaming from servers; the writer would need a second pass for the hint tables.
-- **Full PDF/A, PDF/X and PDF/UA conformance.** Font embedding and color profiles are the hard parts; QuillFolio reports what stands in the way instead of claiming conformance.
+- **Full PDF/A, PDF/X and PDF/UA conformance.** Font embedding and color profiles are the hard parts; Anne's Folio reports what stands in the way instead of claiming conformance.
 - **JavaScript in documents.** Never executed; listed and removable (`dev.javaScriptInfo`, `protect.removeJavaScript`).
 - **XFA forms.** Shown through their AcroForm fallback only.

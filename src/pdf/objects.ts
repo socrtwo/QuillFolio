@@ -1,6 +1,6 @@
 /**
  * PDF object model (ISO 32000-1 §7.3): the eight basic types plus indirect references and streams.
- * Everything QuillFolio reads, repairs, edits and writes is built from these classes.
+ * Everything Anne's Folio reads, repairs, edits and writes is built from these classes.
  */
 
 /** A name object. Interned, so names compare with ===. */

@@ -174,7 +174,7 @@ registerPane({
     for (const s of sigs) {
       el.appendChild(h('div', { class: 'ql-nav-item' }, icon(s.signed ? (s.coversWholeFile ? 'verified' : 'warning') : 'edit_square'),
         h('div', { style: 'flex:1;min-width:0' }, h('b', null, s.field), h('div', { class: 'ql-help' }, s.signed ? `${s.signer || 'Unknown signer'}${s.date ? ' · ' + s.date.toLocaleString() : ''}${s.reason ? ' · ' + s.reason : ''}${s.location ? ' · ' + s.location : ''}` : 'Unsigned'),
-          s.signed ? h('div', { class: 'ql-help' }, `${s.subFilter || s.filter}; byte range ${s.coversWholeFile ? 'covers the whole file (no later changes)' : 'does not cover the whole file: the document was changed after signing'}. QuillFolio does not verify certificates.`) : null)));
+          s.signed ? h('div', { class: 'ql-help' }, `${s.subFilter || s.filter}; byte range ${s.coversWholeFile ? 'covers the whole file (no later changes)' : 'does not cover the whole file: the document was changed after signing'}. Anne's Folio does not verify certificates.`) : null)));
     }
   },
 });

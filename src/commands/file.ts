@@ -121,7 +121,7 @@ export async function produceBytes(app: App, tab: DocTab, mode: SaveMode): Promi
   const { allAnnotations } = await import('../pdf/structure');
   const pdf = doc.save({ incremental: true });
   const annots = allAnnotations(doc).filter((a) => a.subtype !== 'Widget' && a.subtype !== 'Popup' && a.subtype !== 'Link');
-  const report = { app: 'QuillFolio', mimeType: 'application/x-quillfolio-review', file: tab.fileName || tab.title, exported: new Date().toISOString(), pages: doc.pageCount, comments: annots.length, authors: [...new Set(annots.map((a) => a.author).filter(Boolean))], audit: (tab as any).audit || [] };
+  const report = { app: 'Anne\'s Folio', mimeType: 'application/x-quillfolio-review', file: tab.fileName || tab.title, exported: new Date().toISOString(), pages: doc.pageCount, comments: annots.length, authors: [...new Set(annots.map((a) => a.author).filter(Boolean))], audit: (tab as any).audit || [] };
   const data = await zipOf([
     { name: 'mimetype', data: 'application/x-quillfolio-review' },
     { name: `${baseName(app)}.pdf`, data: pdf },
@@ -166,7 +166,7 @@ function markSaved(app: App, tab: DocTab) {
   tab.dirty = false;
   kvDel('draft:' + tab.id);
   app.ui.tabsChanged();
-  document.title = `${tab.displayName} – QuillFolio`;
+  document.title = `${tab.displayName} – Anne's Folio`;
 }
 
 /** Replaces the active document with freshly written bytes (after a rewrite, encryption or optimization). */
@@ -254,7 +254,7 @@ def([
         tab.dirty = true; app.ui.hideBackstage(); return;
       }
       const text = (await readClipboardText()) || app.clip?.text || '';
-      if (!text.trim()) { toast('The clipboard has no image or text QuillFolio can use.'); return; }
+      if (!text.trim()) { toast('The clipboard has no image or text Anne\'s Folio can use.'); return; }
       await newFromText(app, text, 'Clipboard text');
       app.ui.hideBackstage();
     },
@@ -414,7 +414,7 @@ def([
     },
   },
   { id: 'file.shareFlat', label: 'Share Flattened Copy', icon: 'layers_clear', tab: 'Backstage', group: 'Share', noRecord: true, run: async (app) => { const out = await produceBytes(app, app.tab, 'flat'); await shareFile(toBlob(out.data, out.mime), `${baseName(app)} (flattened).pdf`, app.tab.title); } },
-  { id: 'file.email', label: 'Email', icon: 'attach_email', tab: 'Backstage', group: 'Share', noRecord: true, tip: 'Send the PDF as an attachment (uses the system share sheet, which includes your mail app and QuillPost when installed)', run: async (app) => { const out = await produceBytes(app, app.tab, 'incremental'); await shareFile(toBlob(out.data, out.mime), `${baseName(app)}.pdf`, app.tab.title); } },
+  { id: 'file.email', label: 'Email', icon: 'attach_email', tab: 'Backstage', group: 'Share', noRecord: true, tip: 'Send the PDF as an attachment (uses the system share sheet, which includes your mail app and Anne\'s Post when installed)', run: async (app) => { const out = await produceBytes(app, app.tab, 'incremental'); await shareFile(toBlob(out.data, out.mime), `${baseName(app)}.pdf`, app.tab.title); } },
   {
     id: 'file.close', label: 'Close', icon: 'close', tab: 'Backstage', group: 'Close', keys: ['Mod-w', 'Mod-F4'], popular: true, noRecord: true,
     run: async (app, arg) => {
@@ -466,7 +466,7 @@ def([
   },
   {
     id: 'file.alwaysReadOnly', label: 'Always Open Read-Only', icon: 'lock', tab: 'Backstage', group: 'Info', kind: 'toggle', noRecord: true, edits: false,
-    tip: 'Mark the document so QuillFolio opens it read-only (a document property; other readers ignore it)',
+    tip: 'Mark the document so Anne\'s Folio opens it read-only (a document property; other readers ignore it)',
     isActive: (app) => !!app.doc?.info && app.doc.getText(app.doc.info, 'QuillFolioReadOnly') === 'true',
     run: (app) => {
       const on = app.doc.info ? app.doc.getText(app.doc.info, 'QuillFolioReadOnly') === 'true' : false;
@@ -507,7 +507,7 @@ def([
     run: async (app) => {
       const p = app.prefs;
       const { SPELL_DIALECTS } = await import('../proof/proofing');
-      const r = await openDialog({ title: 'QuillFolio Options', wide: true, fields: [
+      const r = await openDialog({ title: 'Anne\'s Folio Options', wide: true, fields: [
         { key: 'h1', type: 'heading', label: 'General' },
         { key: 'author', label: 'User name (comment author)', type: 'text', value: p.author, half: true },
         { key: 'initials', label: 'Initials', type: 'text', value: p.initials, half: true },
@@ -575,7 +575,7 @@ def([
   {
     id: 'file.exportSettings', label: 'Export / Import Settings…', icon: 'import_export', tab: 'Backstage', group: 'Options', noRecord: true,
     run: async (app) => {
-      const r = await openDialog({ title: 'Settings Transfer', help: 'Copy this text to back up your Quick Access Bar, custom tabs, shortcuts, macros and preferences. Paste settings text here and choose Import to restore. The format is shared with the other Quill apps; settings that do not apply to QuillFolio are ignored.', fields: [{ key: 'json', label: 'Settings (JSON)', type: 'textarea', rows: 12, value: JSON.stringify({ ...app.prefs, recent: [] }, null, 1) }], ok: 'Import', buttons: [{ label: 'Copy', onClick: (x) => { navigator.clipboard?.writeText(x.json); toast('Copied'); } }] });
+      const r = await openDialog({ title: 'Settings Transfer', help: 'Copy this text to back up your Quick Access Bar, custom tabs, shortcuts, macros and preferences. Paste settings text here and choose Import to restore. The format is shared with the other Anne\'s Office apps; settings that do not apply to Anne\'s Folio are ignored.', fields: [{ key: 'json', label: 'Settings (JSON)', type: 'textarea', rows: 12, value: JSON.stringify({ ...app.prefs, recent: [] }, null, 1) }], ok: 'Import', buttons: [{ label: 'Copy', onClick: (x) => { navigator.clipboard?.writeText(x.json); toast('Copied'); } }] });
       if (!r) return;
       let p: unknown;
       try { p = JSON.parse(r.json); } catch { /* reported below */ }

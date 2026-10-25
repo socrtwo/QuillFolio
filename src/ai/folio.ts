@@ -1,5 +1,5 @@
 /** Prompts for the AI tab. Only the text a command needs is sent; answers are previewed before anything changes. */
-export const FOLIO_SYSTEM = 'You are an assistant inside QuillFolio, an offline-first PDF app. The user shows you text extracted from PDF pages (it may contain OCR errors and broken lines). Follow the format instructions exactly and add no commentary before or after the requested output.';
+export const FOLIO_SYSTEM = 'You are an assistant inside Anne\'s Folio, an offline-first PDF app. The user shows you text extracted from PDF pages (it may contain OCR errors and broken lines). Follow the format instructions exactly and add no commentary before or after the requested output.';
 
 const quote = (t: string) => `"""\n${t}\n"""`;
 

@@ -120,7 +120,7 @@ def([
         return;
       }
       const text = (await readClipboardText()) || app.clip?.text || '';
-      if (!text) { toast('The clipboard has nothing QuillFolio can paste.'); return; }
+      if (!text) { toast('The clipboard has nothing Anne\'s Folio can paste.'); return; }
       await addTextAt(app, app.page, p.cropBox[0] + 72, p.cropBox[3] - 72);
     },
   },
@@ -198,7 +198,7 @@ def([
       const ex = extractImage(app.doc, im);
       if (ex.kind === 'jpeg' || ex.kind === 'jp2') { await saveBytes(ex.data, `${baseName(app)} ${imageName(im, 0)}`, ex.kind === 'jpeg' ? 'image/jpeg' : 'image/jp2'); return; }
       const rgba = rawToRgba(app.doc, ex);
-      if (!rgba) { toast('This image uses a compression QuillFolio cannot decode (JBIG2 or CCITT); use Copy as Picture for a rendered copy.'); return; }
+      if (!rgba) { toast('This image uses a compression Anne\'s Folio cannot decode (JBIG2 or CCITT); use Copy as Picture for a rendered copy.'); return; }
       const c = document.createElement('canvas'); c.width = ex.width; c.height = ex.height;
       c.getContext('2d')!.putImageData(new ImageData(rgba as any, ex.width, ex.height), 0, 0);
       const blob = await new Promise<Blob | null>((res) => c.toBlob(res, 'image/png'));

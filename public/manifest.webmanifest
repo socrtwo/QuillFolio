@@ -1,6 +1,6 @@
 {
-  "name": "QuillFolio",
-  "short_name": "QuillFolio",
+  "name": "Anne's Folio",
+  "short_name": "Anne's Folio",
   "description": "An open-source PDF app for viewing, editing, forms, signing, OCR and repair, with a complete, customizable command library.",
   "id": "./",
   "start_url": "./",

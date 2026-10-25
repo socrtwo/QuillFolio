@@ -178,7 +178,7 @@ def([
           const prev = old?.stream ? new TextDecoder().decode(doc.decoded(old.stream)) + '\n' : '';
           const line = `${new Date().toISOString()}\t${app.prefs.author}\t${marks.length} mark(s) applied: ${result.textRemoved} text run(s), ${result.imagesRemoved} image(s), ${result.areas} area(s) on page(s) ${[...new Set(marks.map((m) => m.page + 1))].join(', ')}`;
           if (old) { const { removeAttachment } = requireStructure(); removeAttachment(doc, old); }
-          addAttachment(doc, 'redaction-log.txt', new TextEncoder().encode(prev + line), { description: 'QuillFolio redaction log', mime: 'text/plain' });
+          addAttachment(doc, 'redaction-log.txt', new TextEncoder().encode(prev + line), { description: 'Anne\'s Folio redaction log', mime: 'text/plain' });
         }
         return result;
       });
@@ -227,7 +227,7 @@ def([
   },
   { id: 'protect.removeMetadata', label: 'Remove Metadata', icon: 'label_off', tab: 'Protect', group: 'Hidden Information', run: (app) => { app.edit('Remove Metadata', (doc) => sanitize(doc, { metadata: true })); audit(app, 'Metadata removed'); toast('Metadata removed.'); } },
   { id: 'protect.removeAttachments', label: 'Remove Attachments', icon: 'attachment', tab: 'Protect', group: 'Hidden Information', run: async (app) => { const n = readAttachments(app.doc).length; if (!n) { toast('There are no attachments.'); return; } if (await confirmDialog('Remove Attachments', `Remove ${n} attachment(s)?`, 'Remove')) { app.edit('Remove Attachments', (doc) => sanitize(doc, { attachments: true })); audit(app, `${n} attachment(s) removed`); } } },
-  { id: 'protect.removeJavaScript', label: 'Remove JavaScript', icon: 'code_off', tab: 'Protect', group: 'Hidden Information', tip: 'Strip scripts and actions (QuillFolio never runs them anyway)', run: (app) => { const d = app.edit('Remove JavaScript', (doc) => sanitize(doc, { javascript: true })); toast(d?.length ? 'Scripts and actions removed.' : 'The document has no scripts.'); } },
+  { id: 'protect.removeJavaScript', label: 'Remove JavaScript', icon: 'code_off', tab: 'Protect', group: 'Hidden Information', tip: 'Strip scripts and actions (Anne\'s Folio never runs them anyway)', run: (app) => { const d = app.edit('Remove JavaScript', (doc) => sanitize(doc, { javascript: true })); toast(d?.length ? 'Scripts and actions removed.' : 'The document has no scripts.'); } },
   {
     id: 'protect.markFinal', label: 'Mark as Final', icon: 'verified', tab: 'Protect', group: 'Final', kind: 'toggle', noRecord: true, edits: false,
     tip: 'Make the document read-only in this window so nothing changes by accident (not a security feature)',

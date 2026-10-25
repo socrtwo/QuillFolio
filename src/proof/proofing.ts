@@ -1,5 +1,5 @@
 /**
- * Spelling for the text QuillFolio can change: comment contents and form field values.
+ * Spelling for the text Anne's Folio can change: comment contents and form field values.
  *
  * Text being edited is checked as you type by the platform's spell checker (a dialog is
  * contenteditable); Review ▸ Spelling (F7) walks every annotation and form field. Words are checked in a
@@ -12,7 +12,7 @@
 import { installedDictionaries, dictionaryFor, loadDictionary } from './dictionaries';
 
 // --------------------------------------------------------------------------------------------
-// Worker protocol (same messages as QuillPen's proofing engine)
+// Worker protocol (same messages as Anne's Pen's proofing engine)
 
 let worker: Worker | null = null;
 let workerFailures = 0;

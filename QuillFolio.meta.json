@@ -1,6 +1,6 @@
 {
-  "name": "QuillFolio",
-  "description": "An original, open-source PDF app focused on viewing, editing, forms, signing, OCR and repair. Clean-room alternative with a familiar workflow and innovative features. Part of the Quill suite.",
+  "name": "Anne's Folio",
+  "description": "An original, open-source PDF app focused on viewing, editing, forms, signing, OCR and repair. Clean-room alternative with a familiar workflow and innovative features. Part of the Anne's Office suite.",
   "homepage": "https://github.com/socrtwo/QuillFolio/releases/latest",
   "topics": [
     "pdf",
@@ -12,7 +12,7 @@
     "annotations",
     "acrobat-alternative",
     "office-suite",
-    "quill-suite",
+    "annes-office-suite",
     "android",
     "ios",
     "electron",
@@ -24,8 +24,8 @@
     "ai"
   ],
   "keywords": [
-    "quillfolio",
-    "quill-suite",
+    "annes-folio",
+    "annes-office-suite",
     "pdf",
     "pdf-viewer",
     "pdf-editor",

@@ -39,7 +39,7 @@ const RECOMMEND_ORDER: Record<string, string[]> = {
   xml: ['xmltrncatorfixr'],
 };
 
-/** File kinds QuillFolio itself opens. */
+/** File kinds Anne's Folio itself opens. */
 export const HANDLED_HERE = ['pdf', 'fdf', 'xml', 'txt', 'png', 'jpg', 'gif', 'tif', 'bmp', 'webp', 'zip', 'html'];
 
 export const DESCRIPTIONS: Record<string, string> = {

@@ -1,4 +1,4 @@
-/** QuillFolio entry point. */
+/** Anne's Folio entry point. */
 import 'material-symbols/outlined.css';
 import './styles/app.css';
 import './styles/folio.css';
@@ -60,7 +60,7 @@ async function start() {
           if (!s.active) s.active = 'openrouter';
         });
       });
-      if (ok) toast('Signed in to OpenRouter and saved the key. You can close this tab and return to QuillFolio.', { ms: 15000 });
+      if (ok) toast('Signed in to OpenRouter and saved the key. You can close this tab and return to Anne\'s Folio.', { ms: 15000 });
     } catch (e: any) {
       toast(`OpenRouter sign-in did not complete: ${e?.message || e}`, { ms: 10000 });
     }
