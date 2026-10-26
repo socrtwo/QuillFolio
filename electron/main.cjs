@@ -8,6 +8,9 @@
 'use strict';
 const { app, BrowserWindow, protocol, net, ipcMain, dialog, shell, clipboard, safeStorage, powerSaveBlocker, Menu, screen } = require('electron');
 const path = require('node:path');
+// The data folder keeps the app's former name (QuillFolio) so settings, drafts and keys stay where earlier versions put them. // rename:keep
+app.setPath('userData', path.join(app.getPath('appData'), 'QuillFolio')); // rename:keep
+app.setPath('sessionData', app.getPath('userData')); // rename:keep
 const fs = require('node:fs');
 
 const http = require('node:http');
